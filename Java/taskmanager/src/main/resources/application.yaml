@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: taskmanager
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app_db
+    username: spring_boot_user
+    password: ServerAppSecret123!
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      # Ensures Hibernate only validates that entities match the DB,
+      # but never attempts to create or modify tables.
+      ddl-auto: validate
+
+    show-sql: true
+
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
