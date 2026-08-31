@@ -1,6 +1,7 @@
 package info.jeffkerns.taskmanager.dto.request;
 
 import info.jeffkerns.taskmanager.entity.TaskPriority;
+import info.jeffkerns.taskmanager.entity.TaskStatus;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,9 +17,13 @@ public record CreateTaskRequest(
         @Size(max = 256, message = "Description cannot exceed 256 characters")
         String description,
 
+        TaskStatus status,
+
         @NotNull(message = "Task priority is required")
         TaskPriority priority,
 
         @FutureOrPresent(message = "Due date cannot be in the past")
-        LocalDate dueDate
+        LocalDate dueDate,
+
+        Long assignedUserId
 ) {}

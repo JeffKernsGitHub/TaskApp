@@ -24,5 +24,7 @@ public record UpdateTaskRequest(
         TaskPriority priority,
 
         @FutureOrPresent
-        LocalDate dueDate
+        LocalDate dueDate,
+
+        Long assignedUserId
 ) {}

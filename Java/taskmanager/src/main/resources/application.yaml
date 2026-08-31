@@ -1,21 +1,31 @@
 spring:
   application:
     name: taskmanager
+  threads:
+    virtual:
+      enabled: true
   datasource:
-    url: jdbc:postgresql://localhost:5432/app_db
+    url: jdbc:postgresql://localhost:5432/app_db?currentSchema=tasks
     username: spring_boot_user
     password: ServerAppSecret123!
-    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1800000
 
   jpa:
+    open-in-view: false # Closes DB connection after @Service completes; prevents N+1 in web layer
+    generate-ddl: false # Prevents JPA provider from issuing DDL
     hibernate:
-      # Ensures Hibernate only validates that entities match the DB,
-      # but never attempts to create or modify tables.
-      ddl-auto: validate
-
-    show-sql: true
-
+      ddl-auto: validate # Read-only schema verification at boot; fails fast on mismatch
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          batch_size: 25 # High performance JDBC batching
+    show-sql: true
+
+
+server:
+  port: 8080
