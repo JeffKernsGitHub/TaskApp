@@ -6,10 +6,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 
 import info.jeffkerns.taskmanager.service.TaskService;
+import info.jeffkerns.taskmanager.service.UserService;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -22,6 +25,9 @@ class TaskmanagerApplicationTests {
 
 	@Autowired
 	private TaskService taskService;
+
+	@Autowired
+	private UserService userService;
 
 	@Test
 	void contextLoads() {
@@ -38,6 +44,35 @@ class TaskmanagerApplicationTests {
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.page").exists())
 				.andExpect(jsonPath("$.content").isArray());
+	}
+
+	@Test
+	void testListUsersEndpoint() throws Exception {
+		mockMvc.perform(get("/api/v1/users"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.page").exists())
+				.andExpect(jsonPath("$.content").isArray());
+	}
+
+	@Test
+	void testCreateUserEndpoint() throws Exception {
+		String uniqueUsername = "testuser_" + System.currentTimeMillis();
+		String uniqueEmail = uniqueUsername + "@example.com";
+		String payload = """
+				{
+				  "username": "%s",
+				  "email": "%s",
+				  "role": "USER"
+				}
+				""".formatted(uniqueUsername, uniqueEmail);
+
+		mockMvc.perform(post("/api/v1/users")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(payload))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.id").isNumber())
+				.andExpect(jsonPath("$.username").value(uniqueUsername))
+				.andExpect(jsonPath("$.email").value(uniqueEmail));
 	}
 
 }

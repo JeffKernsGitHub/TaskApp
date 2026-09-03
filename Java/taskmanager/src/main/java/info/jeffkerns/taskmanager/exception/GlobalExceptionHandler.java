@@ -30,9 +30,9 @@ public class GlobalExceptionHandler {
         return createProblemDetail(HttpStatus.NOT_FOUND, "Resource Not Found", ex.getMessage(), "not-found", request);
     }
 
-    // 2. Handle 409 Conflict (DuplicateTaskException)
-    @ExceptionHandler(DuplicateTaskException.class)
-    public ProblemDetail handleDuplicateTask(DuplicateTaskException ex, HttpServletRequest request) {
+    // 2. Handle 409 Conflict (DuplicateTaskException, DuplicateUserException)
+    @ExceptionHandler({DuplicateTaskException.class, DuplicateUserException.class})
+    public ProblemDetail handleDuplicateResource(RuntimeException ex, HttpServletRequest request) {
         log.warn("Conflict detected: {}", ex.getMessage());
         return createProblemDetail(HttpStatus.CONFLICT, "Resource Conflict", ex.getMessage(), "conflict", request);
     }

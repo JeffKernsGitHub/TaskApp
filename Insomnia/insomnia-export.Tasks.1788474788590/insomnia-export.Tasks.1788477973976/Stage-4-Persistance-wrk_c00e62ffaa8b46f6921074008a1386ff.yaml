@@ -1,0 +1,301 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Stage 4 Persistance
+meta:
+  id: wrk_c00e62ffaa8b46f6921074008a1386ff
+  created: 1788472086423
+  modified: 1788472086423
+  description: ""
+collection:
+  - url: "{{ _.base_url }}/tasks"
+    name: Task API - List all tasks / query params)
+    meta:
+      id: req_a23edf5f51cc4e2ab41ba8400037eae6
+      created: 1788472099418
+      modified: 1788476970917
+      isPrivate: false
+      description: ""
+      sortKey: -1788472099418
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/tasks?page=0&size=5&sort=dueDate,asc"
+    name: Task API - Task Paginated List
+    meta:
+      id: req_33f9bc14029442eda90fcd1749f84a33
+      created: 1788473225087
+      modified: 1788476980794
+      isPrivate: false
+      description: ""
+      sortKey: -1788473225087
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/tasks/1062"
+    name: Task API - Get Task by ID
+    meta:
+      id: req_e66329b4d180458d9e98385f83998dfd
+      created: 1788473613027
+      modified: 1788476846948
+      isPrivate: false
+      description: ""
+      sortKey: -1788473613027
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/tasks"
+    name: Task API - Create Task
+    meta:
+      id: req_7ae8ff1b178a497fb289cd3f8da2bf39
+      created: 1788474006860
+      modified: 1788476814697
+      isPrivate: false
+      description: ""
+      sortKey: -1788474006860
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "title": "Setup PostgreSQL Database",
+          "description": "Install PostgreSQL and apply canonical task schema",
+          "status": "TODO",
+          "priority": "HIGH",
+          "dueDate": "2026-12-01"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/tasks/2001"
+    name: Task API - Update Task
+    meta:
+      id: req_9db85b6b568f467280b237da1c90d601
+      created: 1788474356327
+      modified: 1788476828990
+      isPrivate: false
+      description: ""
+      sortKey: -1788473809943.5
+    method: PUT
+    body:
+      mimeType: application/json
+      text: >-
+        {
+             "title": "Setup PostgreSQL Database (In Progress)",
+             "description": "PostgreSQL installed and applying canonical task schema",
+             "status": "IN_PROGRESS",
+             "priority": "HIGH",
+             "dueDate": "2026-12-05"
+           }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/tasks/2001"
+    name: Task API - Delete Task
+    meta:
+      id: req_fc5b10c6cdce43f9834d1500a93b8f44
+      created: 1788474668389
+      modified: 1788476838196
+      isPrivate: false
+      description: ""
+      sortKey: -1788473711485.25
+    method: DELETE
+    body:
+      mimeType: application/json
+      text: ""
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/users"
+    name: User API - List all users / query params)
+    meta:
+      id: req_97e32616ca9e4d43b9df51c7779e5d3b
+      created: 1788477092442
+      modified: 1788477098291
+      isPrivate: false
+      description: ""
+      sortKey: -1787782641802
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/users?page=0&size={{ _.page_size }}"
+    name: User API - User Paginated List
+    meta:
+      id: req_c01ff1d0558f4cd391ec2cf4b4e070ee
+      created: 1788477152728
+      modified: 1788477259495
+      isPrivate: false
+      description: ""
+      sortKey: -1788472662252.5
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/users"
+    name: User API - Create User
+    meta:
+      id: req_c54865345d114d199a1dbaa0a37421a4
+      created: 1788477333651
+      modified: 1788477386626
+      isPrivate: false
+      description: ""
+      sortKey: -1788473908401.75
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "jdoe",
+          "email": "jdoe@example.com",
+          "role": "USER"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/users/503"
+    name: User API - Get User by ID
+    meta:
+      id: req_859a4ba6c8ae4ca7b28d2293f591481b
+      created: 1788477448488
+      modified: 1788477921300
+      isPrivate: false
+      description: ""
+      sortKey: -1788473419057
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/users/53"
+    name: User API - Update User
+    meta:
+      id: req_320e92841023427b90db19035843eddb
+      created: 1788477555245
+      modified: 1788477743199
+      isPrivate: false
+      description: ""
+      sortKey: -1788473760714.375
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "jdoe_updated",
+          "email": "jdoe_updated@example.com",
+          "role": "USER"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: "{{ _.base_url }}/users/503"
+    name: User API - Delete User
+    meta:
+      id: req_01feec7da1ed401aaa4e1aa4c904fe4f
+      created: 1788477781594
+      modified: 1788477808221
+      isPrivate: false
+      description: ""
+      sortKey: -1788473662256.125
+    method: DELETE
+    body:
+      mimeType: application/json
+      text: ""
+    headers:
+      - name: Content-Type
+        value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_9f38951e3d1675db51e0784098a4aa56805d4784
+    created: 1788472086425
+    modified: 1788472086425
+environments:
+  name: Base Environment
+  meta:
+    id: env_9f38951e3d1675db51e0784098a4aa56805d4784
+    created: 1788472086424
+    modified: 1788473084228
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080/api/v1
+    page_size: 10
