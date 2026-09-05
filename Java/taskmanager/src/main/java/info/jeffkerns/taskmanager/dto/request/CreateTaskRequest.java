@@ -26,4 +26,10 @@ public record CreateTaskRequest(
         LocalDate dueDate,
 
         Long assignedUserId
-) {}
+) {
+    // Compact canonical constructor for input normalization
+    public CreateTaskRequest {
+        title = (title != null) ? title.strip() : null;
+        description = (description != null) ? description.strip() : null;
+    }
+}

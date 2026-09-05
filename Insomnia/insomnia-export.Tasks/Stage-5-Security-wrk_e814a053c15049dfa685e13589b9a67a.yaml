@@ -1,0 +1,408 @@
+type: collection.insomnia.rest/5.0
+schema_version: '5.1'
+name: Stage 5 - Spring Security & JWT (Milestone 3)
+meta:
+  id: wrk_e814a053c15049dfa685e13589b9a67a
+  created: 1788500000000
+  modified: 1788500000000
+  description: Insomnia collection for Spring Security, Role-Based Access Control
+    (RBAC), and JWT Testing
+collection:
+- name: 0. Authentication (No Auth / Public)
+  meta:
+    id: fld_0_authentication
+    created: 1788500000100
+    modified: 1788500000100
+    sortKey: -1788500000000
+  children:
+  - url: '{{ _.base_url }}/auth/register'
+    name: Public User Registration
+    meta:
+      id: req_auth_register
+      created: 1788500000101
+      modified: 1788500000101
+      isPrivate: false
+      sortKey: -1788500000101
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "jane_doe",
+          "email": "jane.doe@example.com",
+          "password": "SecurePassword123!"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/auth/login'
+    name: User Login
+    meta:
+      id: req_auth_user_login
+      created: 1788500000102
+      modified: 1788500000102
+      isPrivate: false
+      sortKey: -1788500000102
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "jane_doe",
+          "password": "SecurePassword123!"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/auth/login'
+    name: Admin Login
+    meta:
+      id: req_auth_admin_login
+      created: 1788500000103
+      modified: 1788500000103
+      isPrivate: false
+      sortKey: -1788500000103
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "admin_boss",
+          "password": "AdminMasterSecret123!"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 1. Tasks API (Inherits User Bearer Auth)
+  meta:
+    id: fld_1_tasks_api
+    created: 1788500000200
+    modified: 1788500000200
+    sortKey: -1788490000000
+  authentication:
+    type: bearer
+    token: '{% response ''body'', ''req_auth_user_login'', ''b64::JC5hY2Nlc3NUb2tlbg==::46b'',
+      ''when_expired'', 60 %}'
+  children:
+  - url: '{{ _.base_url }}/tasks?page=0&size={{ _.default_page_size }}&sort=dueDate,asc'
+    name: List Tasks (Paginated & Filtered)
+    meta:
+      id: req_tasks_list
+      created: 1788500000201
+      modified: 1788500000201
+      isPrivate: false
+      sortKey: -1788500000201
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/tasks/{% response ''body'', ''req_tasks_create'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Get Single Task by ID
+    meta:
+      id: req_tasks_get_id
+      created: 1788500000202
+      modified: 1788500000202
+      isPrivate: false
+      sortKey: -1788500000202
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/tasks'
+    name: Create Task
+    meta:
+      id: req_tasks_create
+      created: 1788500000203
+      modified: 1788500000203
+      isPrivate: false
+      sortKey: -1788500000203
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "title": "Setup PostgreSQL Database",
+          "description": "Install PostgreSQL and apply canonical task schema",
+          "status": "TODO",
+          "priority": "HIGH",
+          "dueDate": "2026-12-01"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/tasks/{% response ''body'', ''req_tasks_create'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Update Task (Owner or Admin)
+    meta:
+      id: req_tasks_update
+      created: 1788500000204
+      modified: 1788500000204
+      isPrivate: false
+      sortKey: -1788500000204
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "title": "Setup PostgreSQL Database (In Progress)",
+          "description": "PostgreSQL installed and applying canonical task schema",
+          "status": "IN_PROGRESS",
+          "priority": "HIGH",
+          "dueDate": "2026-12-05"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/tasks/{% response ''body'', ''req_tasks_create'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Delete Task (Owner Only)
+    meta:
+      id: req_tasks_delete
+      created: 1788500000205
+      modified: 1788500000205
+      isPrivate: false
+      sortKey: -1788500000205
+    method: DELETE
+    body:
+      mimeType: application/json
+      text: ''
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 2. Users API (User Self-Service - Inherits User Bearer Auth)
+  meta:
+    id: fld_2_users_api
+    created: 1788500000300
+    modified: 1788500000300
+    sortKey: -1788480000000
+  authentication:
+    type: bearer
+    token: '{% response ''body'', ''req_auth_user_login'', ''b64::JC5hY2Nlc3NUb2tlbg==::46b'',
+      ''when_expired'', 60 %}'
+  children:
+  - url: '{{ _.base_url }}/users/{% response ''body'', ''req_auth_register'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Get Own Profile
+    meta:
+      id: req_users_get_self
+      created: 1788500000301
+      modified: 1788500000301
+      isPrivate: false
+      sortKey: -1788500000301
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/users/{% response ''body'', ''req_auth_register'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Update Own Profile
+    meta:
+      id: req_users_update_self
+      created: 1788500000302
+      modified: 1788500000302
+      isPrivate: false
+      sortKey: -1788500000302
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "jane_doe_updated",
+          "email": "jane.doe_updated@example.com"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+- name: 3. Admin Operations (Inherits Admin Bearer Auth)
+  meta:
+    id: fld_3_admin_ops
+    created: 1788500000400
+    modified: 1788500000400
+    sortKey: -1788470000000
+  authentication:
+    type: bearer
+    token: '{% response ''body'', ''req_auth_admin_login'', ''b64::JC5hY2Nlc3NUb2tlbg==::46b'',
+      ''when_expired'', 60 %}'
+  children:
+  - url: '{{ _.base_url }}/users?page=0&size={{ _.default_page_size }}'
+    name: Admin - List All Users (Paginated)
+    meta:
+      id: req_admin_list_users
+      created: 1788500000401
+      modified: 1788500000401
+      isPrivate: false
+      sortKey: -1788500000401
+    method: GET
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/users'
+    name: Admin - Provision User with Explicit Role
+    meta:
+      id: req_admin_provision_user
+      created: 1788500000402
+      modified: 1788500000402
+      isPrivate: false
+      sortKey: -1788500000402
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "username": "moderator_mike",
+          "email": "mike@example.com",
+          "password": "ModPassword123!",
+          "role": "ROLE_USER"
+        }
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/users/{% response ''body'', ''req_auth_register'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Admin - Delete User (Cascades to Tasks)
+    meta:
+      id: req_admin_delete_user
+      created: 1788500000403
+      modified: 1788500000403
+      isPrivate: false
+      sortKey: -1788500000403
+    method: DELETE
+    body:
+      mimeType: application/json
+      text: ''
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+  - url: '{{ _.base_url }}/tasks/{% response ''body'', ''req_tasks_create'', ''b64::JC5pZA==::46b'',
+      ''never'', 60 %}'
+    name: Admin - Delete Any Task
+    meta:
+      id: req_admin_delete_task
+      created: 1788500000404
+      modified: 1788500000404
+      isPrivate: false
+      sortKey: -1788500000404
+    method: DELETE
+    body:
+      mimeType: application/json
+      text: ''
+    headers:
+    - name: Content-Type
+      value: application/json
+    settings:
+      renderRequestBody: true
+      encodeUrl: true
+      followRedirects: global
+      cookies:
+        send: true
+        store: true
+      rebuildPath: true
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_stage5_cookie_jar
+    created: 1788500000000
+    modified: 1788500000000
+environments:
+  name: Base Environment
+  meta:
+    id: env_stage5_base_env
+    created: 1788500000000
+    modified: 1788500000000
+    isPrivate: false
+  data:
+    base_url: http://localhost:8080/api/v1
+    default_page_size: 10

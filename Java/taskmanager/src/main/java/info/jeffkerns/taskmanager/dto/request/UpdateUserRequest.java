@@ -16,4 +16,9 @@ public record UpdateUserRequest(
     String email,
 
     UserRole role
-) {}
+) {
+    public UpdateUserRequest {
+        username = (username != null) ? username.strip() : null;
+        email = (email != null) ? email.strip().toLowerCase() : null;
+    }
+}

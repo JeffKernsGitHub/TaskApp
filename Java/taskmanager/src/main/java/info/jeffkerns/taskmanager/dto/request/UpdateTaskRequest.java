@@ -27,4 +27,10 @@ public record UpdateTaskRequest(
         LocalDate dueDate,
 
         Long assignedUserId
-) {}
+) {
+    // Compact canonical constructor for input normalization
+    public UpdateTaskRequest {
+        title = (title != null) ? title.strip() : null;
+        description = (description != null) ? description.strip() : null;
+    }
+}

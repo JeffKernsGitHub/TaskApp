@@ -4,6 +4,7 @@ import info.jeffkerns.taskmanager.dto.request.CreateUserRequest;
 import info.jeffkerns.taskmanager.dto.request.UpdateUserRequest;
 import info.jeffkerns.taskmanager.dto.response.UserResponse;
 import info.jeffkerns.taskmanager.entity.UserEntity;
+import info.jeffkerns.taskmanager.entity.UserRole;
 import info.jeffkerns.taskmanager.exception.DuplicateUserException;
 import info.jeffkerns.taskmanager.exception.UserNotFoundException;
 import info.jeffkerns.taskmanager.mapper.UserMapper;
@@ -11,6 +12,7 @@ import info.jeffkerns.taskmanager.repository.UserRepository;
 import info.jeffkerns.taskmanager.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -46,21 +50,27 @@ public class UserServiceImpl implements UserService {
             throw new DuplicateUserException("A user with email '" + request.email() + "' already exists");
         }
 
-        var entity = new UserEntity(
+        // 🔐 Hash password with BCrypt (avoiding plain-text storage from Stage 4)
+        String rawPassword = (request.password() != null && !request.password().isBlank())
+            ? request.password()
+            : "DefaultTemporaryPass123!";
+        String hashedPassword = passwordEncoder.encode(rawPassword);
+
+        UserEntity user = new UserEntity(
             request.username(),
             request.email(),
-            request.password(),
-            request.role()
+            hashedPassword,
+            request.role() != null ? request.role() : UserRole.USER
         );
 
-        var saved = userRepository.save(entity);
+        UserEntity saved = userRepository.save(user);
         return UserMapper.toResponse(saved);
     }
 
     @Override
     @Transactional
     public UserResponse updateUser(Long id, UpdateUserRequest request) {
-        var user = userRepository.findById(id)
+        UserEntity user = userRepository.findById(id)
             .orElseThrow(() -> new UserNotFoundException(id));
 
         if (!user.getUsername().equals(request.username()) && userRepository.existsByUsername(request.username())) {

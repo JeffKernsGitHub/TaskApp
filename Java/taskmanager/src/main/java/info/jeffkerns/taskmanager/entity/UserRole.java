@@ -5,6 +5,9 @@ public enum UserRole {
   ADMIN;
 
   public String getAuthority() {
-    return "ROLE_" + name();
+    return switch (this) {
+      case USER -> "ROLE_USER";
+      case ADMIN -> "ROLE_ADMIN";
+    };
   }
 }
