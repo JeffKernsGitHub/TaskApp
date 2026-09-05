@@ -1,3 +1,23 @@
+/**
+ * ==============================================================================
+ * User Controller (REST API Presentation Layer)
+ * ==============================================================================
+ * Exposes administrative and profile management endpoints for user accounts.
+ *
+ * <h3>Key Concepts for Beginners:</h3>
+ * <ul>
+ *   <li><b>Role-Based Access Control (RBAC)</b>:
+ *       Endpoints like listing all users ({@code GET /api/v1/users}) or deleting a user
+ *       ({@code DELETE /api/v1/users/{id}}) are restricted to administrators only using
+ *       {@code @PreAuthorize("hasRole('ADMIN')")}.</li>
+ *
+ *   <li><b>Ownership-Based Access Control</b>:
+ *       Profile viewing and updates allow <i>either</i> an administrator OR the account owner:
+ *       <pre>{@code @PreAuthorize("hasRole('ADMIN') or @userSecurity.isUserOwner(#id, authentication.name)")}</pre>
+ *   </li>
+ * </ul>
+ * ==============================================================================
+ */
 package info.jeffkerns.taskmanager.controller;
 
 import info.jeffkerns.taskmanager.dto.request.CreateUserRequest;
@@ -22,11 +42,22 @@ public class UserController {
 
     private final UserService userService;
 
+    /**
+     * Constructor injection of {@link UserService}.
+     *
+     * @param userService user business service
+     */
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    // Only administrators may enumerate all users in the system
+    /**
+     * Lists all registered users in paginated format.
+     * Only administrators may enumerate users.
+     *
+     * @param pageable pagination parameters (defaults to 10 users per page, newest first)
+     * @return 200 OK with page of user responses
+     */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<UserResponse>> listUsers(
@@ -35,14 +66,26 @@ public class UserController {
         return ResponseEntity.ok(userService.getUsers(pageable));
     }
 
-    // Admins or the account owner can view profile details
+    /**
+     * Retrieves account details for a specific user ID.
+     * Accessible by system administrators or the account owner.
+     *
+     * @param id database ID from URL path
+     * @return 200 OK with user profile details
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isUserOwner(#id, authentication.name)")
     public ResponseEntity<UserResponse> getUser(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
-    // Administrative provisioning with role assignment (self-registration is via /api/v1/auth/register)
+    /**
+     * Administratively provisions a new user account with role assignment.
+     * (Regular public registration is handled via {@code /api/v1/auth/register}).
+     *
+     * @param request validated user creation payload
+     * @return 201 Created with Location header and user body
+     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
@@ -54,7 +97,14 @@ public class UserController {
         return ResponseEntity.created(location).body(created);
     }
 
-    // Admins or the account owner can update profile information
+    /**
+     * Updates an existing user's profile details.
+     * Accessible by system administrators or the account owner.
+     *
+     * @param id      database ID of the user to modify
+     * @param request validated update payload
+     * @return 200 OK with the updated user profile
+     */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @userSecurity.isUserOwner(#id, authentication.name)")
     public ResponseEntity<UserResponse> updateUser(
@@ -64,7 +114,13 @@ public class UserController {
         return ResponseEntity.ok(userService.updateUser(id, request));
     }
 
-    // Only administrators may delete user accounts
+    /**
+     * Permanently removes a user account from the database.
+     * Only system administrators may perform this action.
+     *
+     * @param id database ID of the user to delete
+     * @return 204 No Content
+     */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
@@ -72,3 +128,4 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 }
+

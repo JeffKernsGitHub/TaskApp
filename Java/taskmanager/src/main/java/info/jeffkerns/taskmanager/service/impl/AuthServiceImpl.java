@@ -1,3 +1,26 @@
+/**
+ * ==============================================================================
+ * Authentication Service Implementation (Security Business Logic)
+ * ==============================================================================
+ * Handles new account registration and credentials verification (login).
+ *
+ * <h3>Key Concepts for Beginners:</h3>
+ * <ul>
+ *   <li><b>{@link AuthenticationManager#authenticate(org.springframework.security.core.Authentication)}</b>:
+ *       Spring Security's standard entry point for validating credentials.
+ *       Behind the scenes:
+ *       <ol>
+ *         <li>It calls our {@link org.springframework.security.authentication.dao.DaoAuthenticationProvider}.</li>
+ *         <li>The provider uses {@link org.springframework.security.core.userdetails.UserDetailsService}
+ *             to fetch the user's details and password hash from PostgreSQL.</li>
+ *         <li>It compares the submitted plain password against the stored BCrypt hash.</li>
+ *         <li>If passwords don't match, it throws a {@link org.springframework.security.core.AuthenticationException}
+ *             (like {@code BadCredentialsException}), triggering an HTTP 401 response!</li>
+ *       </ol>
+ *   </li>
+ * </ul>
+ * ==============================================================================
+ */
 package info.jeffkerns.taskmanager.service.impl;
 
 import info.jeffkerns.taskmanager.config.JwtProperties;
@@ -26,6 +49,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final JwtProperties jwtProperties;
 
+    /**
+     * Constructor injection of all authentication infrastructure beans.
+     */
     public AuthServiceImpl(
         UserRepository userRepository,
         PasswordEncoder passwordEncoder,
@@ -40,6 +66,10 @@ public class AuthServiceImpl implements AuthService {
         this.jwtProperties = jwtProperties;
     }
 
+    /**
+     * Registers a new user account.
+     * Enforces username/email uniqueness and encrypts the password with BCrypt.
+     */
     @Override
     @Transactional
     public UserSummaryResponse register(RegisterRequest request) {
@@ -50,6 +80,7 @@ public class AuthServiceImpl implements AuthService {
             throw new DuplicateUserException("Email already exists: " + request.email());
         }
 
+        // Encrypt the plain-text password before saving
         String hashedPassword = passwordEncoder.encode(request.password());
         UserEntity user = new UserEntity(
             request.username(),
@@ -62,17 +93,28 @@ public class AuthServiceImpl implements AuthService {
         return new UserSummaryResponse(saved.getId(), saved.getUsername(), saved.getEmail());
     }
 
+    /**
+     * Authenticates user credentials and returns a signed JWT token.
+     *
+     * @param request credentials payload (username, password)
+     * @return {@link AuthResponse} containing the access token and expiry
+     */
     @Override
     public AuthResponse login(LoginRequest request) {
-        // Authenticate credentials against AuthenticationManager
+        // 1. Authenticate credentials against AuthenticationManager.
+        // If password does not match, an AuthenticationException is thrown here.
         authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
 
+        // 2. Load the authenticated user entity to read roles and claims
         UserEntity user = userRepository.findByUsername(request.username())
             .orElseThrow();
 
+        // 3. Generate a signed JWT token containing subject and role claims
         String token = jwtService.generateToken(user);
+
+        // 4. Return formatted response with token and TTL
         return AuthResponse.of(
             token,
             jwtProperties.expirationMs(),
@@ -81,3 +123,4 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 }
+

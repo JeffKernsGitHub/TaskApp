@@ -1,0 +1,12 @@
+info.jeffkerns.taskmanager
+info.jeffkerns.taskmanager.config
+info.jeffkerns.taskmanager.controller
+info.jeffkerns.taskmanager.dto.request
+info.jeffkerns.taskmanager.dto.response
+info.jeffkerns.taskmanager.entity
+info.jeffkerns.taskmanager.exception
+info.jeffkerns.taskmanager.mapper
+info.jeffkerns.taskmanager.repository
+info.jeffkerns.taskmanager.security
+info.jeffkerns.taskmanager.service
+info.jeffkerns.taskmanager.service.impl

@@ -1,3 +1,31 @@
+/**
+ * ==============================================================================
+ * TaskManager Application Integration Tests
+ * ==============================================================================
+ * Comprehensive integration tests verifying security rules, REST endpoints,
+ * validation constraints, and service layer operations.
+ *
+ * <h3>Key Concepts for Beginners:</h3>
+ * <ul>
+ *   <li><b>{@code @SpringBootTest}</b>:
+ *       Starts the full Spring ApplicationContext, configuring all beans, database connections,
+ *       and security configurations just like in production.</li>
+ *
+ *   <li><b>{@code @AutoConfigureMockMvc}</b>:
+ *       Provides a {@link MockMvc} instance to execute simulated HTTP requests against
+ *       your {@code @RestController} endpoints in-memory without needing a real running web server.</li>
+ *
+ *   <li><b>{@code @Transactional} on Test Classes</b>:
+ *       Any database modifications made during a test method are automatically rolled back
+ *       when the test method completes. This guarantees that tests do not leave dirty data
+ *       behind that would break other tests!</li>
+ *
+ *   <li><b>{@code @WithMockUser}</b>:
+ *       Synthesizes an authenticated user in Spring Security's context for the duration
+ *       of a test method without needing to perform an actual login request.</li>
+ * </ul>
+ * ==============================================================================
+ */
 package info.jeffkerns.taskmanager;
 
 import org.junit.jupiter.api.Test;
@@ -45,26 +73,38 @@ class TaskmanagerApplicationTests {
 	@Autowired
 	private UserService userService;
 
+	/**
+	 * Smoke test verifying that the Spring ApplicationContext loads without errors.
+	 */
 	@Test
 	void contextLoads() {
 	}
 
+	/**
+	 * Tests the task service's pagination and sorting directly at the service layer.
+	 */
 	@Test
 	void testGetTasksService() {
 		var page = taskService.getTasks(null, null, PageRequest.of(0, 5, org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "priority")));
 		if (!page.isEmpty()) {
-			// JDK 21+ Sequenced Collections: getFirst()
+			// JDK 21+ Sequenced Collections: getFirst() retrieves the first element safely
 			var first = page.getContent().getFirst();
 			assertNotNull(first);
 		}
 	}
 
+	/**
+	 * Tests that unauthenticated requests to protected endpoints are rejected with 401/403.
+	 */
 	@Test
 	void testUnauthenticatedAccessReturnsForbiddenOrUnauthorized() throws Exception {
 		mockMvc.perform(get("/api/v1/tasks"))
 				.andExpect(status().isForbidden());
 	}
 
+	/**
+	 * Tests that a user with the USER role can successfully list tasks.
+	 */
 	@Test
 	@WithMockUser(username = "regular_user", roles = {"USER"})
 	void testAuthenticatedUserCanListTasks() throws Exception {
@@ -74,6 +114,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.content").isArray());
 	}
 
+	/**
+	 * Verifies that regular users are forbidden from accessing admin endpoints (e.g. listing all users).
+	 */
 	@Test
 	@WithMockUser(username = "regular_user", roles = {"USER"})
 	void testRegularUserDeniedFromListingUsers() throws Exception {
@@ -81,6 +124,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(status().isForbidden());
 	}
 
+	/**
+	 * Verifies that administrators with ADMIN role can list all users.
+	 */
 	@Test
 	@WithMockUser(username = "admin_user", roles = {"ADMIN"})
 	void testAdminCanListUsers() throws Exception {
@@ -90,11 +136,15 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.content").isArray());
 	}
 
+	/**
+	 * Tests administrative user creation via POST /api/v1/users.
+	 */
 	@Test
 	@WithMockUser(username = "admin_user", roles = {"ADMIN"})
 	void testAdminCreateUserEndpoint() throws Exception {
 		String uniqueUsername = "testadminuser_" + System.currentTimeMillis();
 		String uniqueEmail = uniqueUsername + "@example.com";
+		// Java Text Block (""") for multi-line JSON payload
 		String payload = """
 				{
 				  "username": "%s",
@@ -113,6 +163,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.email").value(uniqueEmail));
 	}
 
+	/**
+	 * Tests the end-to-end public authentication flow: register a new account, then login to get a JWT.
+	 */
 	@Test
 	void testPublicRegisterAndLoginFlow() throws Exception {
 		String uniqueUsername = "reguser_" + System.currentTimeMillis();
@@ -125,7 +178,7 @@ class TaskmanagerApplicationTests {
 				}
 				""".formatted(uniqueUsername, uniqueEmail);
 
-		// 1. Register
+		// Step 1: Register new account
 		mockMvc.perform(post("/api/v1/auth/register")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(regPayload))
@@ -134,7 +187,7 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.username").value(uniqueUsername))
 				.andExpect(jsonPath("$.email").value(uniqueEmail));
 
-		// 2. Login
+		// Step 2: Login with registered credentials
 		String loginPayload = """
 				{
 				  "username": "%s",
@@ -152,6 +205,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.username").value(uniqueUsername));
 	}
 
+	/**
+	 * Tests that an account owner can inspect their own user profile.
+	 */
 	@Test
 	void testUserSecurityOwnerCanViewOwnProfile() throws Exception {
 		String username = "owner_user_" + System.currentTimeMillis();
@@ -169,6 +225,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.username").value(username));
 	}
 
+	/**
+	 * Tests that a regular user is forbidden from viewing another user's profile.
+	 */
 	@Test
 	@WithMockUser(username = "other_user", roles = {"USER"})
 	void testUserSecurityNonOwnerForbiddenFromViewingProfile() throws Exception {
@@ -183,6 +242,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(status().isForbidden());
 	}
 
+	/**
+	 * Tests that a task's owner can update and delete their own task.
+	 */
 	@Test
 	void testTaskSecurityOwnerCanUpdateAndDeleteTask() throws Exception {
 		String username = "task_owner_" + System.currentTimeMillis();
@@ -228,6 +290,9 @@ class TaskmanagerApplicationTests {
 				.andExpect(status().isNoContent());
 	}
 
+	/**
+	 * Tests that a user who is NOT the task owner is forbidden from updating or deleting the task.
+	 */
 	@Test
 	@WithMockUser(username = "other_user_stranger", roles = {"USER"})
 	void testTaskSecurityNonOwnerForbiddenFromUpdatingOrDeletingTask() throws Exception {
@@ -269,3 +334,4 @@ class TaskmanagerApplicationTests {
 				.andExpect(status().isForbidden());
 	}
 }
+
