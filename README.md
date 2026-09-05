@@ -2,6 +2,10 @@
 
 An enterprise-grade cloud-native portfolio project demonstrating modern full-stack architecture, microservice patterns, containerization, and DevOps engineering (Docker, Docker Compose, Kubernetes/K8s, and Jenkins CI/CD).
 
+> 📄 **Core Reference Documentation:**
+> * **[System Design Document](docs/System%20Design%20Document.md)** — Architectural principles, ADRs, NIST SP 800-63B / SP 800-53 session compliance, microservice topology, and sequence flows.
+> * **[Database Data Dictionary](docs/Data%20Dictionary.md)** — PostgreSQL 18 schema catalog, custom ENUM types, indexing justifications, referential integrity, and DBA operational guidelines.
+
 ---
 
 ## Architecture Overview
@@ -46,12 +50,28 @@ An enterprise-grade cloud-native portfolio project demonstrating modern full-sta
 
 ---
 
+## Documentation & Reference Index
+
+Comprehensive engineering specifications, architectural decision records, and operational guides are maintained in the repository:
+
+| Document | Primary Audience | Description |
+| :--- | :--- | :--- |
+| **[System Design Document](docs/System%20Design%20Document.md)** | Senior Engineers / Architects | Three-tier architecture, ADRs, NIST SP 800-63B / SP 800-53 session security, sequence flows, HikariCP tuning, and scalability roadmap. |
+| **[Database Data Dictionary](docs/Data%20Dictionary.md)** | DBAs / Data Engineers | PostgreSQL 18 schema (`tasks`), custom ENUM types, column catalogs, index justifications, cascading deletes, and autovacuum maintenance. |
+| **[Javadoc API Reference](docs/README.md)** | Backend Engineers | HTML5 Javadoc specifications, class contracts, and package diagrams generated from Spring Boot sources (`docs/javadoc/`). |
+| **[Database Architecture Guide](database/README.md)** | DBAs / DevOps | Schema DDL scripts, least-privilege role grants (`spring_boot_user`), and test data seed generation. |
+| **[Kubernetes Deployment Guide](deploy/k8s/README.md)** | DevOps / Cloud Engineers | CNCF Kustomize architecture, base/overlay configurations (`dev`/`prod`), StatefulSet specs, and ingress routing. |
+| **[Jenkins CI/CD Automation](deploy/jenkins/README.md)** | DevOps / SRE | Declarative CI/CD pipelines (`Jenkinsfile.frontend`, `Jenkinsfile.backend`), automated testing, and Trivy security scanning. |
+| **[REST API Test Suites (Insomnia)](insomnia/README.md)** | QA / API Developers | Insomnia REST collections for CRUD verification, JWT Bearer token authentication, and RBAC endpoint testing. |
+
+---
+
 ## Project Structure
 
 ```
 TaskApp/
 ├── frontend/                 # Angular 22 Single Page Application
-│   ├── src/                  # Angular source code
+│   ├── src/                  # Angular source code (Standalone, Signals, Material 3)
 │   ├── nginx/                # NGINX reverse proxy template & configurations
 │   ├── Dockerfile            # Multi-stage Angular build -> NGINX Alpine runtime
 │   ├── build.sh / run.sh     # Local container automation scripts
@@ -67,7 +87,7 @@ TaskApp/
 │   ├── ddl/                  # Schema definitions, enum types, table DDL
 │   ├── permissions/          # Grants, roles, and privilege scripts
 │   ├── seeds/                # Initial seed datasets
-│   └── README.md
+│   └── README.md             # Database architecture & initialization guide
 │
 ├── deploy/                   # DevOps, CI/CD, and Cloud-Native Infrastructure
 │   ├── compose/              # Docker Compose orchestration
@@ -76,8 +96,15 @@ TaskApp/
 │       ├── base/             # Base deployments, services, statefulsets, ingress
 │       └── overlays/         # Environment overlays (dev, prod)
 │
-├── docs/                     # Technical documentation & Javadocs
+├── docs/                     # Technical Documentation & Specifications
+│   ├── System Design Document.md # Comprehensive system design & ADRs
+│   ├── Data Dictionary.md    # DBA data dictionary & PostgreSQL catalog
+│   ├── javadoc/              # Pre-generated HTML5 API documentation
+│   └── README.md             # Documentation directory overview
+│
 ├── insomnia/                 # REST API test collections & environments
+│   ├── insomnia-export.Tasks # Exported workspace test suites
+│   └── README.md             # Insomnia import and execution guide
 │
 ├── docker-compose.yaml       # Root full-stack orchestration
 ├── .dockerignore             # Root build context filter
