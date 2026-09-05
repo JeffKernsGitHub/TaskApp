@@ -141,31 +141,19 @@ export class AuthService {
   }
 
   /**
-   * Fast Demo Login: Immediately authenticates as Admin user
+   * Fast Demo Login: Authenticates as Admin user against live Spring backend
    */
-  quickLoginAsAdmin(): void {
-    this.handleAuthSuccess({
-      accessToken: 'mock-jwt-admin-token-xyz',
-      tokenType: 'Bearer',
-      expiresIn: 3600,
-      username: 'admin',
-      role: 'ADMIN'
-    });
-    this.router.navigate(['/tasks/board']);
+  quickLoginAsAdmin(): Observable<AuthResponse> {
+    this.setMockMode(false);
+    return this.login({ username: 'admin', password: 'Password123!' });
   }
 
   /**
-   * Fast Demo Login: Immediately authenticates as Standard User
+   * Fast Demo Login: Authenticates as Standard User against live Spring backend
    */
-  quickLoginAsUser(): void {
-    this.handleAuthSuccess({
-      accessToken: 'mock-jwt-user-token-abc',
-      tokenType: 'Bearer',
-      expiresIn: 3600,
-      username: 'alice',
-      role: 'USER'
-    });
-    this.router.navigate(['/tasks/board']);
+  quickLoginAsUser(): Observable<AuthResponse> {
+    this.setMockMode(false);
+    return this.login({ username: 'alice', password: 'Password123!' });
   }
 
   /**

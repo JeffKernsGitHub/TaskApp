@@ -58,7 +58,7 @@ import { SidebarComponent } from '../sidebar/sidebar.component';
     }
 
     .app-sidebar {
-      width: 260px;
+      width: 275px;
       border-right: 1px solid var(--border-color);
       background: var(--surface-bg);
     }

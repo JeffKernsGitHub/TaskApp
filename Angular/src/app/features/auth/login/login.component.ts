@@ -298,10 +298,32 @@ export class LoginComponent {
   }
 
   quickLoginAdmin(): void {
-    this.authService.quickLoginAsAdmin();
+    this.isLoading.set(true);
+    this.authService.quickLoginAsAdmin().subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.notification.showSuccess('Welcome back, admin!');
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/tasks';
+        this.router.navigateByUrl(returnUrl);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      }
+    });
   }
 
   quickLoginUser(): void {
-    this.authService.quickLoginAsUser();
+    this.isLoading.set(true);
+    this.authService.quickLoginAsUser().subscribe({
+      next: () => {
+        this.isLoading.set(false);
+        this.notification.showSuccess('Welcome back, alice!');
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/tasks';
+        this.router.navigateByUrl(returnUrl);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      }
+    });
   }
 }

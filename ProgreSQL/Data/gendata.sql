@@ -12,8 +12,10 @@
 --       Password: Password123! | Role: USER
 -- =============================================================================
 
--- Insert Initial Users (admin_boss + 50 sample users)
+-- Insert Initial Users (admin, alice, admin_boss + 50 sample users)
 INSERT INTO tasks.users (username, email, password_hash, role) VALUES
+    ('admin', 'admin@taskmanager.com', '$2a$10$3AwBecmf6Em4y4hnVVDdCe/lGks0Pb8hjvmTc44QxTrha2KMkaMsW', 'ADMIN'),
+    ('alice', 'alice@example.com', '$2a$10$3AwBecmf6Em4y4hnVVDdCe/lGks0Pb8hjvmTc44QxTrha2KMkaMsW', 'USER'),
     ('admin_boss', 'admin.boss@example.com', '$2a$10$X.MXax/vjkj1hHsPSUk.g.j6CRAC2Iv6HF4TjPlRFL2tVwgGGCU5m', 'ADMIN'),
     ('Smith, John A.', 'john.smith@example.com', '$2a$10$3AwBecmf6Em4y4hnVVDdCe/lGks0Pb8hjvmTc44QxTrha2KMkaMsW', 'USER'),
     ('Johnson, Mary B.', 'mary.johnson@example.com', '$2a$10$X.MXax/vjkj1hHsPSUk.g.j6CRAC2Iv6HF4TjPlRFL2tVwgGGCU5m', 'ADMIN'),
