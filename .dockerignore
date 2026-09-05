@@ -1,0 +1,22 @@
+# Git & IDE
+.git
+.gitignore
+.gitattributes
+.idea
+.vscode
+
+# Node & Frontend
+**/node_modules
+**/dist
+**/.angular
+
+# Java & Backend
+**/target
+**/.mvn
+
+# Documentation & Database
+docs/
+insomnia/
+database/
+deploy/
+*.md

@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: taskapp-prod
+
+resources:
+  - ../../base
+
+namePrefix: prod-
+
+commonLabels:
+  environment: prod
+  project: taskapp
+
+replicas:
+  - name: backend-deployment
+    count: 3
+  - name: frontend-deployment
+    count: 3

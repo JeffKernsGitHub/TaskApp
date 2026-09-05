@@ -1,0 +1,86 @@
+# ==============================================================================
+# TaskApp - Full Stack Orchestration (PostgreSQL + Spring Boot + NGINX/Angular)
+# ==============================================================================
+services:
+
+  # 1. PostgreSQL Database Service
+  postgres:
+    image: postgres:18-alpine
+    container_name: postgres_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-mydatabase}
+      POSTGRES_USER: ${POSTGRES_USER:-pguser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-SecretPassword123}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pguser} -d ${POSTGRES_DB:-mydatabase}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - taskapp-net
+
+  # 2. Spring Boot REST API Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: taskapp-backend:latest
+    container_name: taskmanager-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/app_db?currentSchema=tasks
+      SPRING_DATASOURCE_USERNAME: ${APP_DB_USER:-spring_boot_user}
+      SPRING_DATASOURCE_PASSWORD: ${APP_DB_PASSWORD:-ServerAppSecret123!}
+      SPRING_THREADS_VIRTUAL_ENABLED: "true"
+    ports:
+      - "${BACKEND_HOST_PORT:-8081}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      start_period: 25s
+      retries: 3
+    networks:
+      - taskapp-net
+
+  # 3. NGINX Web Server & Reverse Proxy (Angular SPA)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: taskapp-web:latest
+    container_name: taskapp-web
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      BACKEND_HOST: backend
+      BACKEND_PORT: 8080
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:80/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - taskapp-net
+
+# Shared bridge network allowing inter-container DNS resolution
+networks:
+  taskapp-net:
+    driver: bridge
+
+# Existing PostgreSQL data volume
+volumes:
+  pgdata:
+    external: true
