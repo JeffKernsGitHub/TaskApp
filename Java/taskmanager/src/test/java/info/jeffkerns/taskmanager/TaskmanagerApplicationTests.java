@@ -142,10 +142,10 @@ class TaskmanagerApplicationTests {
 	@Test
 	@WithMockUser(username = "admin_user", roles = {"ADMIN"})
 	void testAdminCreateUserEndpoint() throws Exception {
-		String uniqueUsername = "testadminuser_" + System.currentTimeMillis();
-		String uniqueEmail = uniqueUsername + "@example.com";
+		var uniqueUsername = "testadminuser_" + System.currentTimeMillis();
+		var uniqueEmail = uniqueUsername + "@example.com";
 		// Java Text Block (""") for multi-line JSON payload
-		String payload = """
+		var payload = """
 				{
 				  "username": "%s",
 				  "email": "%s",
@@ -168,9 +168,9 @@ class TaskmanagerApplicationTests {
 	 */
 	@Test
 	void testPublicRegisterAndLoginFlow() throws Exception {
-		String uniqueUsername = "reguser_" + System.currentTimeMillis();
-		String uniqueEmail = uniqueUsername + "@example.com";
-		String regPayload = """
+		var uniqueUsername = "reguser_" + System.currentTimeMillis();
+		var uniqueEmail = uniqueUsername + "@example.com";
+		var regPayload = """
 				{
 				  "username": "%s",
 				  "email": "%s",
@@ -188,7 +188,7 @@ class TaskmanagerApplicationTests {
 				.andExpect(jsonPath("$.email").value(uniqueEmail));
 
 		// Step 2: Login with registered credentials
-		String loginPayload = """
+		var loginPayload = """
 				{
 				  "username": "%s",
 				  "password": "SecurePassword123!"
@@ -210,8 +210,8 @@ class TaskmanagerApplicationTests {
 	 */
 	@Test
 	void testUserSecurityOwnerCanViewOwnProfile() throws Exception {
-		String username = "owner_user_" + System.currentTimeMillis();
-		UserResponse user = userService.createUser(new CreateUserRequest(
+		var username = "owner_user_" + System.currentTimeMillis();
+		var user = userService.createUser(new CreateUserRequest(
 				username,
 				username + "@example.com",
 				"SecretPassword123!",
@@ -231,7 +231,7 @@ class TaskmanagerApplicationTests {
 	@Test
 	@WithMockUser(username = "other_user", roles = {"USER"})
 	void testUserSecurityNonOwnerForbiddenFromViewingProfile() throws Exception {
-		UserResponse user = userService.createUser(new CreateUserRequest(
+		var user = userService.createUser(new CreateUserRequest(
 				"target_user_" + System.currentTimeMillis(),
 				"target_user_" + System.currentTimeMillis() + "@example.com",
 				"SecretPassword123!",
@@ -247,15 +247,15 @@ class TaskmanagerApplicationTests {
 	 */
 	@Test
 	void testTaskSecurityOwnerCanUpdateAndDeleteTask() throws Exception {
-		String username = "task_owner_" + System.currentTimeMillis();
-		UserResponse user = userService.createUser(new CreateUserRequest(
+		var username = "task_owner_" + System.currentTimeMillis();
+		var user = userService.createUser(new CreateUserRequest(
 				username,
 				username + "@example.com",
 				"SecretPassword123!",
 				UserRole.USER
 		));
 
-		TaskResponse task = taskService.createTask(new CreateTaskRequest(
+		var task = taskService.createTask(new CreateTaskRequest(
 				"Owned Task " + System.currentTimeMillis(),
 				"Description",
 				TaskStatus.TODO,
@@ -264,7 +264,7 @@ class TaskmanagerApplicationTests {
 				user.id()
 		));
 
-		String updatePayload = """
+		var updatePayload = """
 				{
 				  "title": "Updated Task Title",
 				  "description": "Updated Description",
@@ -296,14 +296,14 @@ class TaskmanagerApplicationTests {
 	@Test
 	@WithMockUser(username = "other_user_stranger", roles = {"USER"})
 	void testTaskSecurityNonOwnerForbiddenFromUpdatingOrDeletingTask() throws Exception {
-		UserResponse user = userService.createUser(new CreateUserRequest(
+		var user = userService.createUser(new CreateUserRequest(
 				"task_creator_" + System.currentTimeMillis(),
 				"task_creator_" + System.currentTimeMillis() + "@example.com",
 				"SecretPassword123!",
 				UserRole.USER
 		));
 
-		TaskResponse task = taskService.createTask(new CreateTaskRequest(
+		var task = taskService.createTask(new CreateTaskRequest(
 				"Secret Task " + System.currentTimeMillis(),
 				"Confidential",
 				TaskStatus.TODO,
@@ -312,7 +312,7 @@ class TaskmanagerApplicationTests {
 				user.id()
 		));
 
-		String updatePayload = """
+		var updatePayload = """
 				{
 				  "title": "Hacked Title",
 				  "description": "Hacked",
