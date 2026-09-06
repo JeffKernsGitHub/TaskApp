@@ -5,6 +5,7 @@
 **System Classification:** Enterprise Cloud-Native Task Management Platform  
 **Author:** Software Engineering Team  
 **Status:** Approved / Production-Ready Reference  
+**Companion Documents:** [Database Data Dictionary](Data%20Dictionary.md) | [Technical Glossary](Glossary.md) | [Root Architecture Guide](../README.md)  
 
 ---
 
@@ -476,3 +477,11 @@ For senior engineers inspecting this repository:
 2. **Deterministic Infrastructure:** Zero host dependencies beyond Docker. The entire stack (DB, API, Web, Network, Volumes) initializes cleanly via `docker compose up -d --build`.
 3. **Enterprise Compliance:** Rigorous alignment with NIST session lifetime guidelines, RFC 9457 error contracts, and principle of least privilege in data tier permissions.
 4. **Architectural Currency:** State-of-the-art framework versions (Java 25, Spring Boot 4.1.1, Angular 22, PostgreSQL 18, NGINX 1.27) demonstrating forward-compatible software engineering leadership.
+
+---
+
+## 11. Companion Documentation & Glossary
+
+* **[Technical & Architectural Glossary](Glossary.md):** Definitions and cross-references for architectural patterns, security controls, and domain terminology used throughout this design document.
+* **[Database Data Dictionary](Data%20Dictionary.md):** Comprehensive PostgreSQL schema, table catalogs, and storage indexing documentation.
+* **[System Documentation Index](README.md):** Overview of technical specifications and Javadoc references.

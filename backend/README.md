@@ -31,6 +31,7 @@ This application demonstrates enterprise-grade Spring Boot architecture, includi
   - [Testing](#testing)
   - [Modern Java Features Highlight](#modern-java-features-highlight)
   - [Troubleshooting \& Common Pitfalls](#troubleshooting--common-pitfalls)
+  - [Related Documentation \& Glossary](#related-documentation--glossary)
 
 ---
 
@@ -446,3 +447,12 @@ If you have multiple JDKs installed, configure `JAVA_HOME`:
 export JAVA_HOME=/path/to/jdk-25
 export PATH=$JAVA_HOME/bin:$PATH
 ```
+
+---
+
+## Related Documentation & Glossary
+
+* **[Technical & Architectural Glossary](../docs/Glossary.md):** Deep-dive definitions for Java 25 Virtual Threads, Spring Boot 4, HikariCP, `open-in-view: false`, and RFC 9457 error models.
+* **[System Design Document](../docs/System%20Design%20Document.md):** Architecture decision records (ADRs), NIST SP 800-63B / SP 800-53 security alignment, and sequence flows.
+* **[Database Data Dictionary](../docs/Data%20Dictionary.md):** PostgreSQL 18 table catalogs, custom ENUM mappings, and indexing strategies.
+* **[Root Project Guide](../README.md):** Repository layout and multi-container Docker Compose setup.

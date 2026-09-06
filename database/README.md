@@ -49,3 +49,12 @@ docker exec -i postgres_db psql -U pguser -d app_db < permissions/permissions.sq
 # 3. Load Development Seed Data
 docker exec -i postgres_db psql -U pguser -d app_db < seeds/gendata.sql
 ```
+
+---
+
+## Related Documentation & Glossary
+
+* **[Technical & Architectural Glossary](../docs/Glossary.md):** Formal definitions for schema partitioning, custom ENUM types, identity sequences, and MVCC.
+* **[Database Data Dictionary](../docs/Data%20Dictionary.md):** Complete column specifications, check constraints, foreign keys, and indexing rationale.
+* **[System Design Document](../docs/System%20Design%20Document.md):** Persistence tier architecture, connection pool tuning, and transaction handling.
+

@@ -43,3 +43,12 @@ kubectl apply -k deploy/k8s/overlays/dev
 ```bash
 kubectl delete -k deploy/k8s/overlays/dev
 ```
+
+---
+
+## Related Documentation & Glossary
+
+* **[Technical & Architectural Glossary](../../docs/Glossary.md):** Definitions for CNCF Kustomize, StatefulSets, PersistentVolumeClaims, Actuator health probes, and cluster namespaces.
+* **[System Design Document](../../docs/System%20Design%20Document.md):** Kubernetes deployment strategy, multi-tier network topologies, and horizontal autoscaling.
+* **[Root Project Guide](../../README.md):** Repository layout and multi-container Docker Compose instructions.
+

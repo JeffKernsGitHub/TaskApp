@@ -7,6 +7,7 @@
 **Application Schema:** `tasks`  
 **Application Runtime Role:** `spring_boot_user`  
 **Status:** Approved / Production-Ready Specification  
+**Companion Documents:** [System Design Document](System%20Design%20Document.md) | [Technical Glossary](Glossary.md) | [Root Architecture Guide](../README.md)  
 
 ---
 
@@ -300,3 +301,11 @@ Both `users` and `tasks` experience frequent updates (`updated_at`, `status`). T
 | **Lead DBA / Reviewer** | *Database Architecture Review* | Principal DBA | 2026-09-05 | **APPROVED** |
 | **Backend Architect** | *Application Engineering* | Staff Software Engineer | 2026-09-05 | **APPROVED** |
 | **Security Officer** | *Infosec / Compliance* | Lead Security Analyst | 2026-09-05 | **APPROVED** |
+
+---
+
+## 11. Companion Documentation & Glossary
+
+* **[Technical & Architectural Glossary](Glossary.md):** Formal definitions for database concepts, schema partitioning, custom ENUM types, identity sequences, and MVCC.
+* **[System Design Document](System%20Design%20Document.md):** Three-tier architecture, Spring Data JPA mappings, and HikariCP connection pool configurations.
+* **[Database Directory Guide](../database/README.md):** Initial DDL migrations, least-privilege role setup, and seed generation scripts.

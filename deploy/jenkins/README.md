@@ -31,3 +31,12 @@ deploy/jenkins/
 3. **Build Image**: Multi-stage build producing `taskapp-backend:${BUILD_NUMBER}` (`docker build backend/`).
 4. **Security Scan**: Dependency-check and container image scan.
 5. **Publish / Deploy**: Push to container registry or trigger Kubernetes deployment.
+
+---
+
+## Related Documentation & Glossary
+
+* **[Technical & Architectural Glossary](../../docs/Glossary.md):** Definitions for Jenkins declarative pipelines, Trivy container security scans, multi-stage builds, and CI/CD stages.
+* **[System Design Document](../../docs/System%20Design%20Document.md):** End-to-end CI/CD pipeline specifications and security gate policies.
+* **[Root Project Guide](../../README.md):** Overall system architecture and quickstart instructions.
+

@@ -5,6 +5,7 @@ An enterprise-grade cloud-native portfolio project demonstrating modern full-sta
 > 📄 **Core Reference Documentation:**
 > * **[System Design Document](docs/System%20Design%20Document.md)** — Architectural principles, ADRs, NIST SP 800-63B / SP 800-53 session compliance, microservice topology, and sequence flows.
 > * **[Database Data Dictionary](docs/Data%20Dictionary.md)** — PostgreSQL 18 schema catalog, custom ENUM types, indexing justifications, referential integrity, and DBA operational guidelines.
+> * **[Technical Glossary](docs/Glossary.md)** — Comprehensive dictionary of domain terms, security controls, architectural patterns, and cloud-native concepts.
 
 ---
 
@@ -58,6 +59,7 @@ Comprehensive engineering specifications, architectural decision records, and op
 | :--- | :--- | :--- |
 | **[System Design Document](docs/System%20Design%20Document.md)** | Senior Engineers / Architects | Three-tier architecture, ADRs, NIST SP 800-63B / SP 800-53 session security, sequence flows, HikariCP tuning, and scalability roadmap. |
 | **[Database Data Dictionary](docs/Data%20Dictionary.md)** | DBAs / Data Engineers | PostgreSQL 18 schema (`tasks`), custom ENUM types, column catalogs, index justifications, cascading deletes, and autovacuum maintenance. |
+| **[Technical Glossary](docs/Glossary.md)** | All Engineering Roles | Comprehensive reference of domain entities, NIST compliance standards, Angular/Spring paradigms, and DevOps terminology. |
 | **[Javadoc API Reference](docs/README.md)** | Backend Engineers | HTML5 Javadoc specifications, class contracts, and package diagrams generated from Spring Boot sources (`docs/javadoc/`). |
 | **[Database Architecture Guide](database/README.md)** | DBAs / DevOps | Schema DDL scripts, least-privilege role grants (`spring_boot_user`), and test data seed generation. |
 | **[Kubernetes Deployment Guide](deploy/k8s/README.md)** | DevOps / Cloud Engineers | CNCF Kustomize architecture, base/overlay configurations (`dev`/`prod`), StatefulSet specs, and ingress routing. |
@@ -99,6 +101,7 @@ TaskApp/
 ├── docs/                     # Technical Documentation & Specifications
 │   ├── System Design Document.md # Comprehensive system design & ADRs
 │   ├── Data Dictionary.md    # DBA data dictionary & PostgreSQL catalog
+│   ├── Glossary.md           # Engineering & architectural glossary
 │   ├── javadoc/              # Pre-generated HTML5 API documentation
 │   └── README.md             # Documentation directory overview
 │

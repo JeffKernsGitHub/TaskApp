@@ -18,3 +18,12 @@ This directory houses exported Insomnia workspaces and test suites for the TaskA
 2. Go to **Settings / Preferences** ➔ **Data** ➔ **Import Data**.
 3. Select **From File** and choose the desired YAML file inside `insomnia-export.Tasks/`.
 4. Set the base URL environment variable to `http://localhost:80` (via NGINX reverse proxy) or `http://localhost:8081` (direct to Spring Boot container).
+
+---
+
+## Related Documentation & Glossary
+
+* **[Technical & Architectural Glossary](../docs/Glossary.md):** Definitions for JWT tokens, Bearer authentication, RBAC, and REST API test suites.
+* **[System Design Document](../docs/System%20Design%20Document.md):** Complete HTTP request lifecycles, security filter chain, and error contracts.
+* **[Backend Service Guide](../backend/README.md):** Spring Boot REST API endpoints, request payloads, and response projections.
+

@@ -118,3 +118,12 @@ The frontend image can be built and run standalone or orchestrated via the root 
 | **Task Management** | `GET /api/v1/tasks`<br>`POST /api/v1/tasks`<br>`PUT /api/v1/tasks/{id}`<br>`DELETE /api/v1/tasks/{id}` | `TaskController` |
 | **User Management** | `GET /api/v1/users`<br>`POST /api/v1/users`<br>`PUT /api/v1/users/{id}`<br>`DELETE /api/v1/users/{id}` | `UserController` |
 | **Actuator Probes** | `GET /actuator/health`<br>`GET /actuator/info` | Spring Boot Actuator |
+
+---
+
+## Related Documentation & Glossary
+
+* **[Technical & Architectural Glossary](../docs/Glossary.md):** Detailed definitions for Angular 22 Signals, zoneless change detection, functional guards, NGINX pushState routing, and more.
+* **[System Design Document](../docs/System%20Design%20Document.md):** Full-stack architecture, ADRs, sequence diagrams, and security models.
+* **[Root Project Guide](../README.md):** Overall system architecture and Docker Compose instructions.
+
