@@ -377,7 +377,8 @@ spring:
 
 #### Backend (`backend/Dockerfile`)
 * **Stage 1 (Builder):** Uses `eclipse-temurin:25-jdk-alpine`, compiles and packages the Spring Boot application jar via Maven wrapper (`./mvnw clean package -DskipTests`).
-* **Stage 2 (Runtime):** Uses `eclipse-temurin:25-jre-alpine`. Runs under a dedicated unprivileged user (`spring`), copying only the executable JAR. Enables memory-efficient JVM flags and runs health probes via lightweight utilities.
+* **Stage 2 (Custom JRE Builder):** Uses `eclipse-temurin:25-jdk-alpine` to unpack the JAR, dynamically detect module dependencies with `jdeps`, and generate a stripped, headless **Server JRE** (~63MB) using `jlink` (`--strip-debug`, `--no-man-pages`, `--no-header-files`, `--compress=zip-6`).
+* **Stage 3 (Runtime):** Uses minimal `alpine:3.21` with `libstdc++`, `ca-certificates`, and `tzdata`. Runs under a dedicated unprivileged user (`spring:spring`), copying only the custom Server JRE and executable JAR. Reduces JRE disk footprint by >70% and minimizes container attack surface while supporting Spring Boot virtual threads and Actuator probes.
 
 ### 7.2 Orchestration Specifications
 

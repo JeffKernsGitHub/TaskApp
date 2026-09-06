@@ -30,8 +30,9 @@ This application demonstrates enterprise-grade Spring Boot architecture, includi
     - [7. Health Check (Actuator)](#7-health-check-actuator)
   - [Testing](#testing)
   - [Modern Java Features Highlight](#modern-java-features-highlight)
-  - [Troubleshooting \& Common Pitfalls](#troubleshooting--common-pitfalls)
-  - [Related Documentation \& Glossary](#related-documentation--glossary)
+  - [Containerization & Custom Server JRE (jlink)](#containerization--custom-server-jre-jlink)
+  - [Troubleshooting & Common Pitfalls](#troubleshooting--common-pitfalls)
+  - [Related Documentation & Glossary](#related-documentation--glossary)
 
 ---
 
@@ -46,6 +47,7 @@ This application demonstrates enterprise-grade Spring Boot architecture, includi
 - **Documentation:** Maven Javadoc Plugin (HTML5 Javadocs)
 - **Testing:** JUnit 5, Mockito, AssertJ, Spring MockMvc, and H2 test database
 - **Build Tool:** Apache Maven 3.9.x via the Maven Wrapper (`mvnw`)
+- **Containerization:** Multi-stage Docker build producing a custom 63MB Server JRE via `jlink` on Alpine Linux 3.21 (202MB total image)
 
 ---
 
@@ -415,6 +417,32 @@ This project is built using modern Java language features:
 - **Java Virtual Threads (Project Loom):** Configured in `application.yaml` via `spring.threads.virtual.enabled: true` for high-concurrency throughput with lightweight thread management.
 - **Java 21+ Sequenced Collections:** Clean collection operations such as `.getFirst()` used across services and tests.
 - **Flexible Constructor Bodies (Java 25):** Pre-`super(...)` input validation in domain exceptions.
+
+---
+
+## Containerization & Custom Server JRE (`jlink`)
+
+The backend container utilizes a **3-stage multi-stage Docker build** that assembles a tailored, minimal **Server JRE** using `jdeps` and `jlink`:
+
+1. **Stage 1 (`build`)**: Compiles and packages the application using Eclipse Temurin JDK 25 on Alpine.
+2. **Stage 2 (`jlink`)**: Unpacks the JAR, runs `jdeps` to determine required module dependencies, includes necessary dynamic Spring/Netty/SQL modules (`java.base`, `java.sql`, `java.naming`, `java.instrument`, `jdk.unsupported`, etc.), and links a stripped headless runtime image (`--strip-debug`, `--no-man-pages`, `--no-header-files`, `--compress=zip-6`).
+3. **Stage 3 (`runtime`)**: Minimal `alpine:3.21` runtime with `ca-certificates`, `tzdata`, and `libstdc++`, executing the Spring Boot fat JAR under an unprivileged `spring:spring` user.
+
+### Key Benefits & Footprint Comparison
+
+| Component | Standard JRE | Custom `jlink` Server JRE | Reduction |
+| :--- | :---: | :---: | :---: |
+| **Java Runtime on Disk** | 227 MB (`eclipse-temurin:25-jre-alpine`) | **62.9 MB** (`/opt/jre`) | **-72.3%** |
+| **Total Container Image** | ~290 MB (estimated) | **202 MB** (`taskapp-backend`) | **-30.3%** |
+| **Security Surface** | Full standard library & debug tools | **21 modules** strictly required | Hardened |
+
+### Building the Image Locally
+
+To build and tag the container image locally:
+
+```bash
+./backend/build.sh taskapp-backend:latest
+```
 
 ---
 

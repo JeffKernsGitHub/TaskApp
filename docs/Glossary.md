@@ -168,7 +168,7 @@
 
 #### Docker Multi-Stage Build
 * **Definition:** A Dockerfile construction method that employs multiple `FROM` instructions to separate compilation environments from the final minimal runtime image.
-* **TaskApp Implementation:** The frontend builder (`node:22-alpine`) copies compiled assets into an `nginx:1.27-alpine` runtime (~21MB), while the backend builder (`eclipse-temurin:25-jdk-alpine`) packages a JAR deployed into an unprivileged `eclipse-temurin:25-jre-alpine` container.
+* **TaskApp Implementation:** The frontend builder (`node:22-alpine`) copies compiled assets into an `nginx:1.27-alpine` runtime (~21MB), while the backend builder employs a 3-stage build: compiling with `eclipse-temurin:25-jdk-alpine`, generating a minimal Server JRE (~63MB) via `jlink`, and deploying into an unprivileged `alpine:3.21` container.
 * **References:** [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-docker-packaging), [frontend/Dockerfile](../frontend/Dockerfile), [backend/Dockerfile](../backend/Dockerfile)
 
 ---
@@ -233,7 +233,7 @@
 
 #### Java 25
 * **Definition:** The LTS-track Java Development Kit and runtime environment powering the TaskApp backend service.
-* **TaskApp Implementation:** Compiled with JDK 25 and running on Eclipse Temurin JRE 25, enabling Project Loom virtual threads and modern language idioms (Records, Pattern Matching).
+* **TaskApp Implementation:** Compiled with JDK 25 and running on a custom stripped Eclipse Temurin Server JRE 25 generated via `jlink`, enabling Project Loom virtual threads and modern language idioms (Records, Pattern Matching).
 * **References:** [backend/README.md](../backend/README.md), [System Design Document § 2 (ADR-001)](System%20Design%20Document.md#adr-001-modern-java-25--project-loom-virtual-threads-over-reactive-webflux)
 
 #### Java Record (DTO)
@@ -245,6 +245,11 @@
 * **Definition:** A structured, version-controlled DSL for authoring Jenkins CI/CD automation pipelines within a `Jenkinsfile`.
 * **TaskApp Implementation:** Defined in `deploy/jenkins/pipeline/Jenkinsfile.frontend` and `deploy/jenkins/pipeline/Jenkinsfile.backend` to automate checkout, linting, unit testing, container build, Trivy vulnerability scanning, and K8s rollout.
 * **References:** [deploy/jenkins/README.md](../deploy/jenkins/README.md), [System Design Document § 7.3](System%20Design%20Document.md#73-jenkins-cicd-automation-architecture-deployjenkins)
+
+#### jlink (Java Linker)
+* **Definition:** A JDK command-line tool that assembles and optimizes a set of modules and their dependencies into a custom, stripped runtime image containing only the necessary components.
+* **TaskApp Implementation:** Used in Stage 2 of `backend/Dockerfile` to generate a 63MB headless Server JRE (stripping debug symbols, header files, and unneeded modules), reducing the backend runtime footprint by over 70% and minimizing container attack surface.
+* **References:** [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-docker-packaging), [backend/Dockerfile](../backend/Dockerfile), [backend/README.md](../backend/README.md#containerization--custom-server-jre-jlink)
 
 #### JWT (JSON Web Token)
 * **Definition:** A compact, URL-safe standard (RFC 7519) for transmitting claims securely between parties as a digitally signed JSON object.

@@ -9,7 +9,7 @@ echo " Building Spring Boot Docker Image: ${IMAGE_TAG}"
 echo " Context: ${SCRIPT_DIR}"
 echo "============================================================"
 
-docker build -f "${SCRIPT_DIR}/Dockerfile" -t "${IMAGE_TAG}" "${SCRIPT_DIR}"
+docker build --load -f "${SCRIPT_DIR}/Dockerfile" -t "${IMAGE_TAG}" "${SCRIPT_DIR}"
 
 echo ""
 echo " Successfully built ${IMAGE_TAG}"

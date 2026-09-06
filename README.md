@@ -81,7 +81,7 @@ TaskApp/
 │
 ├── backend/                  # Spring Boot 4 REST API Service (Java 25)
 │   ├── src/                  # Java controllers, services, repositories, entities
-│   ├── Dockerfile            # Multi-stage Eclipse Temurin JDK 25 -> JRE 25 runtime
+│   ├── Dockerfile            # 3-stage Eclipse Temurin JDK 25 -> Custom Server JRE (jlink) on Alpine
 │   ├── pom.xml / mvnw        # Maven project descriptor & wrapper (JDK 25)
 │   └── build.sh              # Backend container build script
 │
