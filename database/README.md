@@ -40,6 +40,10 @@ database/
 To manually apply the schema and seed data against a running PostgreSQL container or local instance:
 
 ```bash
+# 0. Ensure application database and user exist (if fresh container)
+docker exec -i postgres_db psql -U pguser -d postgres -c "CREATE USER spring_boot_user WITH PASSWORD 'ServerAppSecret123!';" 2>/dev/null || true
+docker exec -i postgres_db psql -U pguser -d postgres -c "CREATE DATABASE app_db OWNER spring_boot_user;" 2>/dev/null || true
+
 # 1. Apply DDL Schema
 docker exec -i postgres_db psql -U pguser -d app_db < ddl/task-schema.sql
 

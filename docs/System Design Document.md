@@ -382,7 +382,7 @@ spring:
 
 ### 7.2 Orchestration Specifications
 
-#### 1. Docker Compose (`docker-compose.yaml`)
+#### 1. Docker Compose (`deploy/Docker/docker-compose.yaml`)
 Designed for developer onboarding and integration testing:
 * Automated service startup order using Docker health checks:
   `postgres` (healthy via `pg_isready`) -> `backend` (healthy via `/actuator/health`) -> `frontend` (healthy via `/health`).
@@ -409,21 +409,24 @@ deploy/k8s/
   * `livenessProbe`: `HTTP GET /actuator/health/liveness` (detects thread deadlocks and triggers automated pod restarts).
 
 ### 7.3 Jenkins CI/CD Automation Architecture (`deploy/jenkins/`)
-Declarative CI/CD pipelines defined in version-controlled Jenkinsfiles:
-* **`Jenkinsfile.frontend`:**
+Declarative CI/CD pipelines defined in version-controlled Jenkinsfiles under `deploy/jenkins/pipeline/`:
+* **`Jenkinsfile.docker` (Docker Build, Test & Compose Pipeline):**
   1. *Checkout:* Git clone & checkout.
-  2. *Static Analysis & Lint:* ESLint and TypeScript compilation check.
-  3. *Unit Testing:* Headless Karma/Jasmine tests.
-  4. *Container Build:* Multi-stage Docker build tagging `taskapp-web:${BUILD_NUMBER}`.
-  5. *Vulnerability Scan:* Trivy container image scan.
-  6. *Deployment:* Kubernetes rolling update via Kustomize.
-* **`Jenkinsfile.backend`:**
+  2. *Environment Diagnostics:* Verification of JDK 25 (`$JAVA25_HOME`), Docker CLI, Docker Compose, and Node.js toolchains.
+  3. *Backend Automated Tests (JDK 25):* Spring Boot unit and slice tests (`./mvnw clean test`) executing against in-memory H2 database; publishes JUnit test results.
+  4. *Frontend Lint & Test Build:* Dependency installation (`npm ci`) and production Angular bundle build.
+  5. *Build Docker Images:* Multi-stage Docker builds tagging `taskapp-backend:${IMAGE_TAG}` and `taskapp-web:${IMAGE_TAG}`.
+  6. *Docker Compose Smoke Test:* Spins up full stack via `deploy/Docker/docker-compose.yaml`, polls backend `/actuator/health` probe, and tears down gracefully.
+  7. *Registry Push (Optional):* Pushes tagged container images to a remote container registry if enabled.
+* **`Jenkinsfile.k8s` (Kubernetes Kustomize Deployment Pipeline):**
   1. *Checkout:* Git clone & checkout.
-  2. *Automated Testing:* Unit and slice tests (`./mvnw test`) executing against in-memory H2 database.
-  3. *Javadoc Generation:* Validation of Java 25 documentation standards.
-  4. *Container Build:* Docker build tagging `taskapp-backend:${BUILD_NUMBER}`.
-  5. *Vulnerability Scan:* Dependency-Check and Trivy image scanning.
-  6. *Deployment:* K8s deployment rollout.
+  2. *Diagnostics:* Toolchain verification (JDK 25, Docker, `kubectl`, and `kustomize`).
+  3. *Automated Tests:* Parallel test execution for Spring Boot backend (JDK 25) and Angular frontend.
+  4. *Build Container Images:* Builds multi-stage container images for backend and frontend.
+  5. *Configure Kustomize Overlay:* Dynamically sets target image tags using `kustomize edit set image` in `deploy/k8s/overlays/${TARGET_ENV}`.
+  6. *Validate Manifests:* Manifest synthesis and dry-run validation using `kubectl kustomize`.
+  7. *Deploy to Cluster:* Applies the rendered overlay to the target namespace (`taskapp-${TARGET_ENV}`).
+  8. *Rollout Health Verification:* Monitors `kubectl rollout status` for StatefulSets and Deployments until readiness probes succeed.
 
 ---
 

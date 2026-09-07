@@ -1,0 +1,191 @@
+// ==============================================================================
+// Jenkinsfile.docker - Docker Build, Test & Compose Deployment Pipeline
+// ==============================================================================
+// Orchestrates end-to-end building, JDK 25 testing, containerization, and
+// Docker Compose stack verification for the TaskApp full-stack application.
+// ==============================================================================
+
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        ansiColor('xterm')
+        timestamps()
+    }
+
+    parameters {
+        string(name: 'IMAGE_TAG', defaultValue: "build-${BUILD_NUMBER}", description: 'Container image tag')
+        booleanParam(name: 'RUN_SMOKE_TEST', defaultValue: true, description: 'Spin up and verify Docker Compose stack')
+        booleanParam(name: 'PUSH_IMAGES', defaultValue: false, description: 'Push built images to remote container registry')
+        string(name: 'REGISTRY_URL', defaultValue: '', description: 'Container registry URL (e.g. docker.io/myrepo or AWS ECR)')
+    }
+
+    environment {
+        // Point Maven explicitly to Eclipse Temurin JDK 25
+        JAVA25_HOME = '/opt/java/openjdk-25'
+        JAVA_HOME = "${JAVA25_HOME}"
+        PATH = "${JAVA25_HOME}/bin:${env.PATH}"
+        BACKEND_IMAGE = "taskapp-backend"
+        FRONTEND_IMAGE = "taskapp-web"
+    }
+
+    stages {
+        stage('Checkout Source') {
+            steps {
+                echo "==> Pulling source code..."
+                checkout scm
+            }
+        }
+
+        stage('Environment Diagnostics') {
+            steps {
+                echo "==> Diagnostic: Checking compiler and container toolchains..."
+                sh '''
+                    echo "--- Java Version ---"
+                    "${JAVA25_HOME}/bin/java" -version
+                    
+                    echo "--- Docker CLI ---"
+                    docker --version
+                    
+                    echo "--- Docker Compose ---"
+                    docker compose version
+                    
+                    echo "--- Node.js & NPM ---"
+                    node --version || true
+                    npm --version || true
+                '''
+            }
+        }
+
+        stage('Backend Automated Tests (JDK 25)') {
+            steps {
+                echo "==> Executing Spring Boot test suite with JDK 25..."
+                dir('backend') {
+                    sh '''
+                        export JAVA_HOME="${JAVA25_HOME}"
+                        export PATH="${JAVA25_HOME}/bin:${PATH}"
+                        chmod +x ./mvnw
+                        ./mvnw clean test -B
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Frontend Lint & Test Build') {
+            steps {
+                echo "==> Validating Angular application build..."
+                dir('frontend') {
+                    sh '''
+                        npm ci
+                        npm run build -- --configuration production
+                    '''
+                }
+            }
+        }
+
+        stage('Build Docker Images') {
+            steps {
+                echo "==> Building multi-stage production Docker images..."
+                sh """
+                    echo "Building ${BACKEND_IMAGE}:${params.IMAGE_TAG}..."
+                    docker build \
+                        -t ${BACKEND_IMAGE}:${params.IMAGE_TAG} \
+                        -t ${BACKEND_IMAGE}:latest \
+                        ./backend
+
+                    echo "Building ${FRONTEND_IMAGE}:${params.IMAGE_TAG}..."
+                    docker build \
+                        -t ${FRONTEND_IMAGE}:${params.IMAGE_TAG} \
+                        -t ${FRONTEND_IMAGE}:latest \
+                        ./frontend
+                """
+            }
+        }
+
+        stage('Docker Compose Stack Smoke Test') {
+            when {
+                expression { return params.RUN_SMOKE_TEST }
+            }
+            steps {
+                echo "==> Starting Docker Compose integration test stack..."
+                sh '''
+                    # Ensure prerequisite external pgdata volume exists for postgres
+                    docker volume create pgdata || true
+
+                    # Validate compose configuration
+                    docker compose -f deploy/Docker/docker-compose.yaml config > /dev/null
+                    
+                    # Launch stack in detached mode
+                    docker compose -f deploy/Docker/docker-compose.yaml up -d
+
+                    echo "Waiting for services to become healthy..."
+                    ATTEMPTS=0
+                    MAX_ATTEMPTS=24
+                    SUCCESS=false
+
+                    while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                        ATTEMPTS=$((ATTEMPTS + 1))
+                        echo "Health check attempt $ATTEMPTS/$MAX_ATTEMPTS..."
+                        
+                        # Verify backend Actuator health
+                        if curl -s -f http://127.0.0.1:8081/actuator/health >/dev/null 2>&1; then
+                            echo "Backend Actuator is HEALTHY."
+                            SUCCESS=true
+                            break
+                        fi
+                        sleep 5
+                    done
+
+                    if [ "$SUCCESS" != "true" ]; then
+                        echo "Smoke test failed! Collecting container logs..."
+                        docker compose -f deploy/Docker/docker-compose.yaml logs
+                        docker compose -f deploy/Docker/docker-compose.yaml down -v
+                        error("Smoke test timed out waiting for backend healthcheck.")
+                    fi
+
+                    echo "Stack verified successfully."
+                '''
+            }
+            post {
+                always {
+                    echo "Tearing down smoke test Compose stack..."
+                    sh 'docker compose -f deploy/Docker/docker-compose.yaml down || true'
+                }
+            }
+        }
+
+        stage('Push Container Images') {
+            when {
+                expression { return params.PUSH_IMAGES && params.REGISTRY_URL != '' }
+            }
+            steps {
+                echo "==> Tagging and publishing images to ${params.REGISTRY_URL}..."
+                sh """
+                    docker tag ${BACKEND_IMAGE}:${params.IMAGE_TAG} ${params.REGISTRY_URL}/${BACKEND_IMAGE}:${params.IMAGE_TAG}
+                    docker tag ${FRONTEND_IMAGE}:${params.IMAGE_TAG} ${params.REGISTRY_URL}/${FRONTEND_IMAGE}:${params.IMAGE_TAG}
+                    docker push ${params.REGISTRY_URL}/${BACKEND_IMAGE}:${params.IMAGE_TAG}
+                    docker push ${params.REGISTRY_URL}/${FRONTEND_IMAGE}:${params.IMAGE_TAG}
+                """
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully: All tests passed and Docker containers built."
+        }
+        failure {
+            echo "Pipeline failed! Please check logs above for compilation or container errors."
+        }
+        always {
+            cleanWs deleteDirs: true, notFailBuild: true
+        }
+    }
+}

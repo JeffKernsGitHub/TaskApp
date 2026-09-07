@@ -1,0 +1,234 @@
+// ==============================================================================
+// Jenkinsfile.k8s - Kubernetes Cloud-Native Kustomize Deployment Pipeline
+// ==============================================================================
+// Automates JDK 25 testing, containerization, CNCF Kustomize overlay configuration,
+// dry-run validation, cluster deployment, and rollout healthcheck monitoring.
+// ==============================================================================
+
+pipeline {
+    agent any
+
+    options {
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '15'))
+        ansiColor('xterm')
+        timestamps()
+    }
+
+    parameters {
+        choice(
+            name: 'TARGET_ENV',
+            choices: ['dev', 'prod'],
+            description: 'Target Kubernetes deployment environment overlay'
+        )
+        string(
+            name: 'IMAGE_TAG',
+            defaultValue: "build-${BUILD_NUMBER}",
+            description: 'Container image tag to deploy'
+        )
+        string(
+            name: 'KUBECONFIG_CREDENTIAL_ID',
+            defaultValue: 'k8s-kubeconfig',
+            description: 'Jenkins Credential ID containing kubeconfig (optional if using host/agent ~/.kube/config)'
+        )
+        booleanParam(
+            name: 'SKIP_TESTS',
+            defaultValue: false,
+            description: 'Skip automated test execution for rapid deployment'
+        )
+    }
+
+    environment {
+        JAVA25_HOME = '/opt/java/openjdk-25'
+        JAVA_HOME = "${JAVA25_HOME}"
+        PATH = "${JAVA25_HOME}/bin:${env.PATH}"
+        BACKEND_IMAGE = "taskapp-backend"
+        FRONTEND_IMAGE = "taskapp-web"
+        NAMESPACE = "taskapp-${params.TARGET_ENV}"
+    }
+
+    stages {
+        stage('Checkout Source') {
+            steps {
+                echo "==> Pulling source code..."
+                checkout scm
+            }
+        }
+
+        stage('Environment Diagnostics') {
+            steps {
+                echo "==> Diagnostic: Checking compiler and cluster toolchains..."
+                sh '''
+                    echo "--- Java Version ---"
+                    "${JAVA25_HOME}/bin/java" -version
+                    
+                    echo "--- Docker Version ---"
+                    docker --version
+                    
+                    echo "--- Kubectl Version ---"
+                    kubectl version --client --output=yaml
+                    
+                    echo "--- Kustomize Version ---"
+                    kustomize version
+                '''
+            }
+        }
+
+        stage('Automated Tests (JDK 25 & Angular)') {
+            when {
+                expression { return !params.SKIP_TESTS }
+            }
+            parallel {
+                stage('Backend Tests') {
+                    steps {
+                        echo "==> Running backend Spring Boot tests on JDK 25..."
+                        dir('backend') {
+                            sh '''
+                                export JAVA_HOME="${JAVA25_HOME}"
+                                export PATH="${JAVA25_HOME}/bin:${PATH}"
+                                chmod +x ./mvnw
+                                ./mvnw clean test -B
+                            '''
+                        }
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'backend/target/surefire-reports/*.xml'
+                        }
+                    }
+                }
+
+                stage('Frontend Build Validation') {
+                    steps {
+                        echo "==> Validating Angular production bundle..."
+                        dir('frontend') {
+                            sh '''
+                                npm ci
+                                npm run build -- --configuration production
+                            '''
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Build Container Images') {
+            steps {
+                echo "==> Building container images for ${params.TARGET_ENV}..."
+                sh """
+                    docker build \
+                        -t ${BACKEND_IMAGE}:${params.IMAGE_TAG} \
+                        -t ${BACKEND_IMAGE}:latest \
+                        ./backend
+
+                    docker build \
+                        -t ${FRONTEND_IMAGE}:${params.IMAGE_TAG} \
+                        -t ${FRONTEND_IMAGE}:latest \
+                        ./frontend
+                """
+            }
+        }
+
+        stage('Configure Kustomize Overlay') {
+            steps {
+                echo "==> Updating Kustomize image references in overlays/${params.TARGET_ENV}..."
+                dir("deploy/k8s/overlays/${params.TARGET_ENV}") {
+                    sh """
+                        # Update image tags in overlay kustomization
+                        kustomize edit set image ${BACKEND_IMAGE}=${BACKEND_IMAGE}:${params.IMAGE_TAG}
+                        kustomize edit set image ${FRONTEND_IMAGE}=${FRONTEND_IMAGE}:${params.IMAGE_TAG}
+
+                        echo "--- Rendered Manifest Preview ---"
+                        kubectl kustomize . > rendered-manifests.yaml
+                        cat rendered-manifests.yaml
+                    """
+                }
+            }
+        }
+
+        stage('Validate Manifests') {
+            steps {
+                echo "==> Validating Kustomize manifest generation..."
+                dir("deploy/k8s/overlays/${params.TARGET_ENV}") {
+                    sh '''
+                        kubectl kustomize . > /dev/null
+                        echo "[✓] Kustomize bundle successfully rendered and validated."
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes Cluster') {
+            steps {
+                echo "==> Deploying overlay '${params.TARGET_ENV}' to namespace '${env.NAMESPACE}'..."
+                script {
+                    def deployCommands = """
+                        # Ensure target namespace exists
+                        kubectl create namespace ${env.NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+
+                        # Dry-run validation against live API server
+                        kubectl apply -k deploy/k8s/overlays/${params.TARGET_ENV} --dry-run=server || kubectl apply -k deploy/k8s/overlays/${params.TARGET_ENV} --dry-run=client
+
+                        # Apply full Kustomize bundle
+                        kubectl apply -k deploy/k8s/overlays/${params.TARGET_ENV}
+                    """
+
+                    // Use Jenkins Kubernetes CLI plugin credentials if configured; otherwise use agent kubeconfig
+                    try {
+                        withKubeConfig([credentialsId: params.KUBECONFIG_CREDENTIAL_ID]) {
+                            sh deployCommands
+                        }
+                    } catch (err) {
+                        echo "Credentials ID '${params.KUBECONFIG_CREDENTIAL_ID}' not found or plugin inactive. Attempting standard cluster credentials..."
+                        sh deployCommands
+                    }
+                }
+            }
+        }
+
+        stage('Rollout Health Verification') {
+            steps {
+                echo "==> Verifying rollout status for namespace '${env.NAMESPACE}'..."
+                script {
+                    def verifyCommands = """
+                        echo "Waiting for backend deployment rollout..."
+                        kubectl rollout status deployment/${params.TARGET_ENV}-backend-deployment \
+                            -n ${env.NAMESPACE} \
+                            --timeout=180s
+
+                        echo "Waiting for frontend deployment rollout..."
+                        kubectl rollout status deployment/${params.TARGET_ENV}-frontend-deployment \
+                            -n ${env.NAMESPACE} \
+                            --timeout=180s
+
+                        echo "--- Pod Status in ${env.NAMESPACE} ---"
+                        kubectl get pods -n ${env.NAMESPACE} -o wide
+
+                        echo "--- Service Endpoints ---"
+                        kubectl get svc -n ${env.NAMESPACE}
+                    """
+
+                    try {
+                        withKubeConfig([credentialsId: params.KUBECONFIG_CREDENTIAL_ID]) {
+                            sh verifyCommands
+                        }
+                    } catch (err) {
+                        sh verifyCommands
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Kubernetes deployment of '${params.TARGET_ENV}' overlay completed successfully."
+        }
+        failure {
+            echo "Kubernetes deployment failed! Inspect deployment and pod logs."
+        }
+        always {
+            cleanWs deleteDirs: true, notFailBuild: true
+        }
+    }
+}

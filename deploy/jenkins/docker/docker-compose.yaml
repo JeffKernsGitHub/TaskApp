@@ -1,0 +1,46 @@
+# ==============================================================================
+# Jenkins CI/CD Controller Orchestration
+# ==============================================================================
+# All mutable state (configuration, credentials, jobs, artifacts, plugin data,
+# and dependency caches) is stored in persistent EXTERNAL Docker volumes.
+# ==============================================================================
+services:
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: taskapp-jenkins:latest
+    container_name: taskapp-jenkins
+    restart: unless-stopped
+    ports:
+      - "${JENKINS_HTTP_PORT:-8080}:8080"
+      - "${JENKINS_AGENT_PORT:-50000}:50000"
+    environment:
+      JAVA_OPTS: >-
+        -Djava.awt.headless=true
+        -XX:+UseContainerSupport
+        -XX:MaxRAMPercentage=75.0
+      JAVA25_HOME: /opt/java/openjdk-25
+    volumes:
+      # 1. Primary mutable Jenkins data (configs, jobs, plugins, secrets)
+      - jenkins_data:/var/jenkins_home
+      # 2. External cache volume for Maven dependencies (survives rebuilds)
+      - jenkins_maven_cache:/var/jenkins_home/.m2
+      # 3. Host Docker daemon socket for container building & Compose orchestration
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - jenkins-net
+
+networks:
+  jenkins-net:
+    driver: bridge
+
+# ==============================================================================
+# External Volumes (Explicitly isolated from Compose lifecycle)
+# To create before running: ./init-volumes.sh
+# ==============================================================================
+volumes:
+  jenkins_data:
+    external: true
+  jenkins_maven_cache:
+    external: true

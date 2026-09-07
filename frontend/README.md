@@ -77,7 +77,7 @@ npm test -- --watch=false
 
 ## Production Docker Container
 
-The frontend image can be built and run standalone or orchestrated via the root `docker-compose.yaml`.
+The frontend image can be built and run standalone or orchestrated via `deploy/Docker/docker-compose.yaml`.
 
 ### 1. Build Container Image
 ```bash

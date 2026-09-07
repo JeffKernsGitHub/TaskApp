@@ -27,7 +27,7 @@ services:
   # 2. Spring Boot REST API Backend Service
   backend:
     build:
-      context: ./backend
+      context: ../../backend
       dockerfile: Dockerfile
     image: taskapp-backend:latest
     container_name: taskmanager-api
@@ -54,7 +54,7 @@ services:
   # 3. NGINX Web Server & Reverse Proxy (Angular SPA)
   frontend:
     build:
-      context: ./frontend
+      context: ../../frontend
       dockerfile: Dockerfile
     image: taskapp-web:latest
     container_name: taskapp-web

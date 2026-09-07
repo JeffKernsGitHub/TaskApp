@@ -1,0 +1,26 @@
+# Jenkins Pipeline & Workflow
+workflow-aggregator:latest
+pipeline-stage-view:latest
+pipeline-model-definition:latest
+pipeline-graph-analysis:latest
+
+# SCM & Git
+git:latest
+git-client:latest
+
+# Credentials & Security
+credentials:latest
+credentials-binding:latest
+
+# Docker Integration
+docker-workflow:latest
+docker-plugin:latest
+
+# Kubernetes Integration
+kubernetes-cli:latest
+
+# Utilities & Workspace
+ws-cleanup:latest
+timestamper:latest
+ansicolor:latest
+configuration-as-code:latest

@@ -163,8 +163,8 @@
 
 #### Docker Compose
 * **Definition:** A tool for defining and running multi-container Docker applications through declarative YAML configuration files.
-* **TaskApp Implementation:** Defined in `docker-compose.yaml` to orchestrate the PostgreSQL container, Spring Boot backend API, and NGINX frontend reverse proxy on an isolated bridge network (`taskapp-net`) with healthcheck sequencing.
-* **References:** [README.md](../README.md#quick-start-docker-compose), [System Design Document § 7.2](System%20Design%20Document.md#1-docker-compose-docker-composeyaml)
+* **TaskApp Implementation:** Defined in `deploy/Docker/docker-compose.yaml` to orchestrate the PostgreSQL container, Spring Boot backend API, and NGINX frontend reverse proxy on an isolated bridge network (`taskapp-net`) with healthcheck sequencing.
+* **References:** [README.md](../README.md#quick-start-docker-compose), [System Design Document § 7.2](System%20Design%20Document.md#1-docker-compose-deploydockerdocker-composeyaml)
 
 #### Docker Multi-Stage Build
 * **Definition:** A Dockerfile construction method that employs multiple `FROM` instructions to separate compilation environments from the final minimal runtime image.
@@ -243,7 +243,7 @@
 
 #### Jenkins Declarative Pipeline
 * **Definition:** A structured, version-controlled DSL for authoring Jenkins CI/CD automation pipelines within a `Jenkinsfile`.
-* **TaskApp Implementation:** Defined in `deploy/jenkins/pipeline/Jenkinsfile.frontend` and `deploy/jenkins/pipeline/Jenkinsfile.backend` to automate checkout, linting, unit testing, container build, Trivy vulnerability scanning, and K8s rollout.
+* **TaskApp Implementation:** Defined in `deploy/jenkins/pipeline/Jenkinsfile.docker` and `deploy/jenkins/pipeline/Jenkinsfile.k8s` to automate JDK 25 testing, container packaging, Docker Compose smoke tests, and Kubernetes Kustomize rollout.
 * **References:** [deploy/jenkins/README.md](../deploy/jenkins/README.md), [System Design Document § 7.3](System%20Design%20Document.md#73-jenkins-cicd-automation-architecture-deployjenkins)
 
 #### jlink (Java Linker)
@@ -429,7 +429,7 @@
 
 #### Trivy
 * **Definition:** A comprehensive and versatile security vulnerability and misconfiguration scanner for container images, file systems, and Git repositories.
-* **TaskApp Implementation:** Executed as an automated quality gate within Jenkins declarative pipelines (`Jenkinsfile.frontend`, `Jenkinsfile.backend`) to inspect container images prior to cluster deployment.
+* **TaskApp Implementation:** Executed as an automated security quality gate within CI/CD pipelines to inspect container images prior to cluster deployment.
 * **References:** [deploy/jenkins/README.md](../deploy/jenkins/README.md), [System Design Document § 7.3](System%20Design%20Document.md#73-jenkins-cicd-automation-architecture-deployjenkins)
 
 ---
