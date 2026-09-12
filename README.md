@@ -1,6 +1,6 @@
 # TaskApp - Full-Stack Enterprise Task Management Application
 
-An enterprise-grade cloud-native portfolio project demonstrating modern full-stack architecture, microservice patterns, containerization, and DevOps engineering (Docker, Docker Compose, Kubernetes/K8s, and Jenkins CI/CD).
+An enterprise-grade cloud-native portfolio project demonstrating modern full-stack architecture, microservice patterns, containerization, and DevOps engineering (Podman, Podman Compose, Kubernetes/K8s, and Jenkins CI/CD).
 
 > 📄 **Core Reference Documentation:**
 > * **[System Design Document](docs/System%20Design%20Document.md)** — Architectural principles, ADRs, NIST SP 800-63B / SP 800-53 session compliance, microservice topology, and sequence flows.
@@ -18,7 +18,7 @@ An enterprise-grade cloud-native portfolio project demonstrating modern full-sta
                                                       │ http://localhost (Port 80)
                                                       ▼
 ┌─────────────────────────────────────────────────────────────────────────────────────────────┐
-│ Docker Network: taskapp-net / Kubernetes Cluster Namespace                                  │
+│ Podman Network: taskapp-net / Kubernetes Cluster Namespace                                  │
 │                                                                                             │
 │  ┌────────────────────────┐         Proxy /api/*          ┌──────────────────────────────┐  │
 │  │   NGINX Web Server     ├──────────────────────────────►│    Spring Boot Backend       │  │
@@ -45,7 +45,7 @@ An enterprise-grade cloud-native portfolio project demonstrating modern full-sta
 * **Backend (`backend/`):** Spring Boot 4.1.1 on Java 25 (Project Loom Virtual Threads, Spring Security, JWT HMAC-SHA256, Spring Data JPA / Hibernate 7)
 * **Database (`database/`):** PostgreSQL 18 Alpine (Custom `tasks` schema, ENUM types, custom sequences, HikariCP connection pooling)
 * **Orchestration & DevOps (`deploy/`):**
-  * **Docker & Compose:** Multi-stage builds, non-root runtime users, healthcheck probes
+  * **Podman & Compose:** Rootless multi-stage builds, non-root runtime users, healthcheck probes
   * **Kubernetes (`deploy/k8s/`):** CNCF Kustomize manifests (Deployments, StatefulSets, Services, Ingress, Overlays)
   * **Jenkins (`deploy/jenkins/`):** Automation controller infrastructure and declarative pipelines
 
@@ -63,7 +63,7 @@ Comprehensive engineering specifications, architectural decision records, and op
 | **[Javadoc API Reference](docs/README.md)** | Backend Engineers | HTML5 Javadoc specifications, class contracts, and package diagrams generated from Spring Boot sources (`docs/javadoc/`). |
 | **[Database Architecture Guide](database/README.md)** | DBAs / DevOps | Schema DDL scripts, least-privilege role grants (`spring_boot_user`), and test data seed generation. |
 | **[Kubernetes Deployment Guide](deploy/k8s/README.md)** | DevOps / Cloud Engineers | CNCF Kustomize architecture, base/overlay configurations (`dev`/`prod`), StatefulSet specs, and ingress routing. |
-| **[Jenkins CI/CD Automation](deploy/jenkins/README.md)** | DevOps / SRE | Declarative CI/CD pipelines (`Jenkinsfile.docker`, `Jenkinsfile.k8s`), automated testing, container builds, and deployment. |
+| **[Jenkins CI/CD Automation](deploy/jenkins/README.md)** | DevOps / SRE | Declarative CI/CD pipelines (`Jenkinsfile.podman`, `Jenkinsfile.k8s`), automated testing, container builds, and deployment. |
 | **[REST API Test Suites (Insomnia)](insomnia/README.md)** | QA / API Developers | Insomnia REST collections for CRUD verification, JWT Bearer token authentication, and RBAC endpoint testing. |
 
 ---
@@ -76,14 +76,14 @@ TaskApp/
 │   ├── src/                  # Angular source code (Standalone, Signals, Material 3)
 │   ├── nginx/                # NGINX reverse proxy template & configurations
 │   ├── Dockerfile            # Multi-stage Angular build -> NGINX Alpine runtime
-│   ├── build.sh / run.sh     # Local container automation scripts
+│   ├── build.sh / run.sh     # Local container automation scripts (Podman)
 │   └── package.json
 │
 ├── backend/                  # Spring Boot 4 REST API Service (Java 25)
 │   ├── src/                  # Java controllers, services, repositories, entities
 │   ├── Dockerfile            # 3-stage Eclipse Temurin JDK 25 -> Custom Server JRE (jlink) on Alpine
 │   ├── pom.xml / mvnw        # Maven project descriptor & wrapper (JDK 25)
-│   └── build.sh              # Backend container build script
+│   └── build.sh              # Backend container build script (Podman)
 │
 ├── database/                 # PostgreSQL Database Assets
 │   ├── ddl/                  # Schema definitions, enum types, table DDL
@@ -92,7 +92,7 @@ TaskApp/
 │   └── README.md             # Database architecture & initialization guide
 │
 ├── deploy/                   # DevOps, CI/CD, and Cloud-Native Infrastructure
-│   ├── Docker/               # Docker Compose full-stack orchestration
+│   ├── podman/               # Podman Compose full-stack orchestration
 │   ├── jenkins/              # Jenkins CI/CD infrastructure & pipelines
 │   └── k8s/                  # Kubernetes Manifests (CNCF Kustomize standard)
 │       ├── base/             # Base deployments, services, statefulsets, ingress
@@ -109,7 +109,8 @@ TaskApp/
 │   ├── insomnia-export.Tasks # Exported workspace test suites
 │   └── README.md             # Insomnia import and execution guide
 │
-├── .dockerignore             # Root build context filter
+├── .containerignore          # Podman / Buildah context filter
+├── .dockerignore             # Secondary context filter
 └── README.md                 # Root architecture & onboarding guide
 ```
 
@@ -117,28 +118,28 @@ TaskApp/
 
 TaskApp supports two containerized runtime modes:
 
-1. **Docker Mode (Docker Compose):** Orchestrated multi-container local environment (`PostgreSQL` + `Spring Boot` + `NGINX/Angular`).
+1. **Podman Mode (Podman Compose):** Orchestrated multi-container local environment (`PostgreSQL` + `Spring Boot` + `NGINX/Angular`).
 2. **Kubernetes Mode (K8s / Minikube):** Cloud-native declarative deployment using CNCF Kustomize overlays (`dev` and `prod`).
 
 ---
 
-## Run Mode 1: Docker Compose
+## Run Mode 1: Podman Compose
 
 ### 1. Provision Persistent Storage (First-Time Setup)
 Create the persistent named volume for PostgreSQL data if not already present:
 ```bash
-docker volume create pgdata
+podman volume create pgdata
 ```
 
 ### 2. Launch the Stack
 From the project root:
 ```bash
-docker compose -f deploy/Docker/docker-compose.yaml up -d --build
+podman compose -f deploy/podman/docker-compose.yaml up -d --build
 ```
-Or from the `deploy/Docker` directory:
+Or from the `deploy/podman` directory:
 ```bash
-cd deploy/Docker
-docker compose up -d --build
+cd deploy/podman
+podman compose up -d --build
 ```
 
 ### 3. Access the Application
@@ -151,18 +152,18 @@ docker compose up -d --build
 When modifying frontend or backend source code, rebuild and restart only the affected container without restarting PostgreSQL:
 ```bash
 # Redeploy Backend after Java/Spring changes:
-docker compose -f deploy/Docker/docker-compose.yaml up -d --build backend
+podman compose -f deploy/podman/docker-compose.yaml up -d --build backend
 
 # Redeploy Frontend after Angular/NGINX changes:
-docker compose -f deploy/Docker/docker-compose.yaml up -d --build frontend
+podman compose -f deploy/podman/docker-compose.yaml up -d --build frontend
 
 # Redeploy Both:
-docker compose -f deploy/Docker/docker-compose.yaml up -d --build
+podman compose -f deploy/podman/docker-compose.yaml up -d --build
 ```
 
 ### 5. Teardown
 ```bash
-docker compose -f deploy/Docker/docker-compose.yaml down
+podman compose -f deploy/podman/docker-compose.yaml down
 ```
 *(Omitting `-v` preserves the PostgreSQL `pgdata` volume and data integrity)*
 
@@ -174,9 +175,9 @@ TaskApp includes declarative CNCF Kustomize manifests designed for local develop
 
 ### Quick Start:
 ```bash
-# 1. Build and load initial images into Minikube
-docker build -t taskapp-backend:latest ./backend
-docker build -t taskapp-web:latest ./frontend
+# 1. Build and load initial images into Minikube with Podman
+podman build -t taskapp-backend:latest ./backend
+podman build -t taskapp-web:latest ./frontend
 minikube image load taskapp-backend:latest
 minikube image load taskapp-web:latest
 
@@ -198,8 +199,8 @@ When you modify frontend or backend code while the cluster is running:
 
 ```bash
 # 1. Rebuild the modified container image:
-docker build -t taskapp-backend:latest ./backend   # for Backend changes
-docker build -t taskapp-web:latest ./frontend       # for Frontend changes
+podman build -t taskapp-backend:latest ./backend   # for Backend changes
+podman build -t taskapp-web:latest ./frontend       # for Frontend changes
 
 # 2. Reload the updated image into Minikube runtime:
 minikube image load taskapp-backend:latest          # for Backend
@@ -214,7 +215,7 @@ kubectl rollout status deployment/dev-backend-deployment -n taskapp-dev
 kubectl rollout status deployment/dev-frontend-deployment -n taskapp-dev
 ```
 > [!TIP]
-> **Minikube Docker Shortcut:** Run `eval $(minikube docker-env)` in your terminal once. Future `docker build` commands will build directly inside Minikube's Docker daemon, skipping the `minikube image load` step!
+> **Minikube Podman Shortcut:** When running Minikube with the Podman driver (`minikube start --driver=podman`), run `eval $(minikube podman-env)` in your terminal once. Future `podman build` commands will build directly inside Minikube's Podman engine, skipping the `minikube image load` step!
 
 ### Teardown:
 ```bash
@@ -227,24 +228,24 @@ kubectl delete -k deploy/k8s/overlays/dev
 
 Instead of manual container rebuilding and restarts, you can use Jenkins to automatically test, build, and redeploy TaskApp whenever you modify backend or frontend code.
 
-The repository includes a containerized Jenkins controller under `deploy/jenkins/docker/` with pre-configured toolchains (JDK 25, Docker CLI, `kubectl`, `kustomize`, Node 22) and two declarative pipelines under `deploy/jenkins/pipeline/`:
+The repository includes a containerized Jenkins controller under `deploy/jenkins/podman/` with pre-configured toolchains (JDK 25, Podman CLI, `kubectl`, `kustomize`, Node 22) and two declarative pipelines under `deploy/jenkins/pipeline/`:
 
 | Run Mode | Jenkins Pipeline File | Automation Workflow |
 | :--- | :--- | :--- |
-| **Docker Compose** | [`Jenkinsfile.docker`](deploy/jenkins/pipeline/Jenkinsfile.docker) | Executes JDK 25 unit tests & Angular build, builds Docker images, spins up `deploy/Docker/docker-compose.yaml`, runs Actuator health smoke tests, and tears down test containers. |
-| **Kubernetes / Minikube** | [`Jenkinsfile.k8s`](deploy/jenkins/pipeline/Jenkinsfile.k8s) | Parallel test execution, container image builds, dynamic Kustomize overlay configuration (`kustomize edit set image`), `kubectl apply -k deploy/k8s/overlays/${TARGET_ENV}`, and rollout verification. |
+| **Podman Compose** | [`Jenkinsfile.podman`](deploy/jenkins/pipeline/Jenkinsfile.podman) | Executes JDK 25 unit tests & Angular build, builds Podman images, spins up `deploy/podman/docker-compose.yaml`, runs Actuator health smoke tests, and tears down test containers. |
+| **Kubernetes / Minikube** | [`Jenkinsfile.k8s`](deploy/jenkins/pipeline/Jenkinsfile.k8s) | Parallel test execution, container image builds via Podman, dynamic Kustomize overlay configuration (`kustomize edit set image`), `kubectl apply -k deploy/k8s/overlays/${TARGET_ENV}`, and rollout verification. |
 
 ### 1. Start the Jenkins Controller
 ```bash
-cd deploy/jenkins/docker
+cd deploy/jenkins/podman
 ./init-volumes.sh
-docker compose up -d
+podman compose up -d
 ```
 Access Jenkins at [http://localhost:8080](http://localhost:8080).
 
 ### 2. Session Run Mode Determination
-Because TaskApp can be running in either Docker Compose or Minikube during any given session, Jenkins separates the run modes into **dedicated on-demand jobs**:
-* **`taskapp-docker-deploy`:** Targets your active Docker Compose stack (`Jenkinsfile.docker`).
+Because TaskApp can be running in either Podman Compose or Minikube during any given session, Jenkins separates the run modes into **dedicated on-demand jobs**:
+* **`taskapp-podman-deploy`:** Targets your active Podman Compose stack (`Jenkinsfile.podman`).
 * **`taskapp-k8s-deploy`:** Targets your active Minikube/Kubernetes cluster (`Jenkinsfile.k8s`).
 
 You trigger the job corresponding to the runtime you started for that development session.
@@ -253,8 +254,8 @@ You trigger the job corresponding to the runtime you started for that developmen
 * **Via Jenkins UI:** Open [http://localhost:8080](http://localhost:8080), select the job for your active session, and click **Build with Parameters** (or **Build Now**).
 * **Via Terminal CLI (1-Click Trigger):**
   ```bash
-  # Deploy to Docker Compose on demand:
-  curl -X POST http://localhost:8080/job/taskapp-docker-deploy/build \
+  # Deploy to Podman Compose on demand:
+  curl -X POST http://localhost:8080/job/taskapp-podman-deploy/build \
     --user admin:<JENKINS_API_TOKEN>
 
   # Deploy to Minikube on demand:
@@ -269,6 +270,3 @@ If you prefer automatic builds on every commit instead of on-demand:
 * **GitHub Webhook:** Check **GitHub hook trigger for GITScm polling** to immediately build and deploy upon `git push`.
 
 For complete configuration instructions, see the **[Jenkins CI/CD Automation Guide](deploy/jenkins/README.md)**.
-
-
-

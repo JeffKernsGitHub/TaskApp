@@ -1,10 +1,10 @@
 # ==============================================================================
-# Custom Jenkins Controller with Eclipse Temurin JDK 25, Docker CLI, and K8s Tools
+# Custom Jenkins Controller with Eclipse Temurin JDK 25, Podman CLI, and K8s Tools
 # ==============================================================================
 FROM jenkins/jenkins:lts-jdk21
 
 LABEL maintainer="TaskApp DevOps Team"
-LABEL description="Jenkins Controller container with JDK 25, Docker CLI, kubectl, and kustomize for TaskApp CI/CD"
+LABEL description="Jenkins Controller container with JDK 25, Podman CLI, kubectl, and kustomize for TaskApp CI/CD"
 
 USER root
 
@@ -32,16 +32,12 @@ RUN mkdir -p ${JAVA25_HOME} && \
     mkdir -p /usr/lib/jvm && \
     ln -s ${JAVA25_HOME} /usr/lib/jvm/temurin-25-jdk
 
-# 3. Install Docker CLI & Docker Compose Plugin
-RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-    chmod a+r /etc/apt/keyrings/docker.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list && \
-    apt-get update && \
+# 3. Install Podman CLI & Podman Compose
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      docker-ce-cli \
-      docker-compose-plugin \
-      docker-buildx-plugin && \
+      podman \
+      podman-docker \
+      podman-compose && \
     rm -rf /var/lib/apt/lists/*
 
 # 4. Install Kubectl CLI
@@ -61,9 +57,9 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y --no-install-recommends nodejs && \
     rm -rf /var/lib/apt/lists/*
 
-# 7. Configure Docker group and add jenkins user
-RUN groupadd -for docker && \
-    usermod -aG docker jenkins
+# 7. Configure Podman/Docker group and add jenkins user
+RUN groupadd -for podman && \
+    usermod -aG podman jenkins
 
 # 8. Pre-install Jenkins Plugins
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
@@ -76,6 +72,7 @@ RUN chmod +x /usr/local/bin/entrypoint-wrapper.sh
 # Environment variables
 ENV PATH="${JAVA25_HOME}/bin:${PATH}"
 ENV JAVA25_HOME="${JAVA25_HOME}"
+ENV CONTAINER_HOST="unix:///run/podman/podman.sock"
 
 ENTRYPOINT ["/usr/local/bin/entrypoint-wrapper.sh"]
 CMD ["/usr/bin/tini", "--", "/usr/local/bin/jenkins.sh"]

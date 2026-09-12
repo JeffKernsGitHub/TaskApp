@@ -62,8 +62,8 @@ pipeline {
                     echo "--- Java Version ---"
                     "${JAVA25_HOME}/bin/java" -version
                     
-                    echo "--- Docker Version ---"
-                    docker --version
+                    echo "--- Podman Version ---"
+                    podman --version
                     
                     echo "--- Kubectl Version ---"
                     kubectl version --client --output=yaml
@@ -114,14 +114,14 @@ pipeline {
 
         stage('Build Container Images') {
             steps {
-                echo "==> Building container images for ${params.TARGET_ENV}..."
+                echo "==> Building container images for ${params.TARGET_ENV} with Podman..."
                 sh """
-                    docker build \
+                    podman build \
                         -t ${BACKEND_IMAGE}:${params.IMAGE_TAG} \
                         -t ${BACKEND_IMAGE}:latest \
                         ./backend
 
-                    docker build \
+                    podman build \
                         -t ${FRONTEND_IMAGE}:${params.IMAGE_TAG} \
                         -t ${FRONTEND_IMAGE}:latest \
                         ./frontend

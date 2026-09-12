@@ -41,17 +41,17 @@ To manually apply the schema and seed data against a running PostgreSQL containe
 
 ```bash
 # 0. Ensure application database and user exist (if fresh container)
-docker exec -i postgres_db psql -U pguser -d postgres -c "CREATE USER spring_boot_user WITH PASSWORD 'ServerAppSecret123!';" 2>/dev/null || true
-docker exec -i postgres_db psql -U pguser -d postgres -c "CREATE DATABASE app_db OWNER spring_boot_user;" 2>/dev/null || true
+podman exec -i postgres_db psql -U pguser -d postgres -c "CREATE USER spring_boot_user WITH PASSWORD 'ServerAppSecret123!';" 2>/dev/null || true
+podman exec -i postgres_db psql -U pguser -d postgres -c "CREATE DATABASE app_db OWNER spring_boot_user;" 2>/dev/null || true
 
 # 1. Apply DDL Schema
-docker exec -i postgres_db psql -U pguser -d app_db < ddl/task-schema.sql
+podman exec -i postgres_db psql -U pguser -d app_db < ddl/task-schema.sql
 
 # 2. Grant Permissions
-docker exec -i postgres_db psql -U pguser -d app_db < permissions/permissions.sql
+podman exec -i postgres_db psql -U pguser -d app_db < permissions/permissions.sql
 
 # 3. Load Development Seed Data
-docker exec -i postgres_db psql -U pguser -d app_db < seeds/gendata.sql
+podman exec -i postgres_db psql -U pguser -d app_db < seeds/gendata.sql
 ```
 
 ---

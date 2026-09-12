@@ -47,7 +47,7 @@ This application demonstrates enterprise-grade Spring Boot architecture, includi
 - **Documentation:** Maven Javadoc Plugin (HTML5 Javadocs)
 - **Testing:** JUnit 5, Mockito, AssertJ, Spring MockMvc, and H2 test database
 - **Build Tool:** Apache Maven 3.9.x via the Maven Wrapper (`mvnw`)
-- **Containerization:** Multi-stage Docker build producing a custom 63MB Server JRE via `jlink` on Alpine Linux 3.21 (202MB total image)
+- **Containerization:** Multi-stage Podman/OCI build producing a custom 63MB Server JRE via `jlink` on Alpine Linux 3.21 (202MB total image)
 
 ---
 
@@ -63,7 +63,7 @@ Before running the application, ensure you have the following installed:
    Ensure your `JAVA_HOME` environment variable points to your JDK 25 installation.
 
 2. **PostgreSQL Database**:
-   A PostgreSQL server running locally (or via Docker) on port `5432`.
+   A PostgreSQL server running locally (or via Podman) on port `5432`.
    See [Database Setup](#database-setup) below for schema and user creation.
 
 > [!NOTE]
@@ -422,7 +422,7 @@ This project is built using modern Java language features:
 
 ## Containerization & Custom Server JRE (`jlink`)
 
-The backend container utilizes a **3-stage multi-stage Docker build** that assembles a tailored, minimal **Server JRE** using `jdeps` and `jlink`:
+The backend container utilizes a **3-stage multi-stage Podman/OCI build** that assembles a tailored, minimal **Server JRE** using `jdeps` and `jlink`:
 
 1. **Stage 1 (`build`)**: Compiles and packages the application using Eclipse Temurin JDK 25 on Alpine.
 2. **Stage 2 (`jlink`)**: Unpacks the JAR, runs `jdeps` to determine required module dependencies, includes necessary dynamic Spring/Netty/SQL modules (`java.base`, `java.sql`, `java.naming`, `java.instrument`, `jdk.unsupported`, etc.), and links a stripped headless runtime image (`--strip-debug`, `--no-man-pages`, `--no-header-files`, `--compress=zip-6`).
@@ -458,8 +458,8 @@ chmod +x mvnw
 Ensure PostgreSQL is active and listening on port 5432:
 ```bash
 sudo systemctl status postgresql
-# or if using Docker:
-docker ps
+# or if using Podman:
+podman ps
 ```
 
 ### 3. `Schema-validation: missing table [tasks.users]`
@@ -483,4 +483,4 @@ export PATH=$JAVA_HOME/bin:$PATH
 * **[Technical & Architectural Glossary](../docs/Glossary.md):** Deep-dive definitions for Java 25 Virtual Threads, Spring Boot 4, HikariCP, `open-in-view: false`, and RFC 9457 error models.
 * **[System Design Document](../docs/System%20Design%20Document.md):** Architecture decision records (ADRs), NIST SP 800-63B / SP 800-53 security alignment, and sequence flows.
 * **[Database Data Dictionary](../docs/Data%20Dictionary.md):** PostgreSQL 18 table catalogs, custom ENUM mappings, and indexing strategies.
-* **[Root Project Guide](../README.md):** Repository layout and multi-container Docker Compose setup.
+* **[Root Project Guide](../README.md):** Repository layout and multi-container Podman Compose setup.

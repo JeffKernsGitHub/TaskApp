@@ -51,11 +51,11 @@ kubectl delete -k deploy/k8s/overlays/dev
 To deploy TaskApp locally on Minikube using host-built images:
 
 ### 1. Build Host Images & Load into Minikube
-Build the container images on your host Docker engine and load them directly into the Minikube cluster:
+Build the container images on your host with Podman and load them directly into the Minikube cluster:
 ```bash
-# Build images from project root
-docker build -t taskapp-backend:latest ./backend
-docker build -t taskapp-web:latest ./frontend
+# Build images from project root with Podman
+podman build -t taskapp-backend:latest ./backend
+podman build -t taskapp-web:latest ./frontend
 
 # Load images into Minikube's internal container runtime
 minikube image load taskapp-backend:latest
@@ -105,10 +105,10 @@ When modifying backend (Java) or frontend (Angular/NGINX) source code while Mini
 1. **Rebuild the modified container image:**
    ```bash
    # If backend changed:
-   docker build -t taskapp-backend:latest ./backend
+   podman build -t taskapp-backend:latest ./backend
 
    # If frontend changed:
-   docker build -t taskapp-web:latest ./frontend
+   podman build -t taskapp-web:latest ./frontend
    ```
 
 2. **Reload the updated image into Minikube runtime:**
@@ -128,7 +128,7 @@ When modifying backend (Java) or frontend (Angular/NGINX) source code while Mini
    ```
 
 > [!TIP]
-> **Minikube Docker Environment Shortcut:** Run `eval $(minikube docker-env)` in your terminal once per shell session. Future `docker build` commands build directly inside Minikube's Docker daemon, eliminating the need to execute `minikube image load`!
+> **Minikube Podman Integration:** If running Minikube with the Podman driver (`minikube start --driver=podman`), you can run `eval $(minikube podman-env)` in your terminal. Future `podman build` commands build directly inside Minikube's Podman storage, eliminating the need to execute `minikube image load`!
 
 ---
 
@@ -136,5 +136,5 @@ When modifying backend (Java) or frontend (Angular/NGINX) source code while Mini
 
 * **[Technical & Architectural Glossary](../../docs/Glossary.md):** Definitions for CNCF Kustomize, StatefulSets, PersistentVolumeClaims, Actuator health probes, and cluster namespaces.
 * **[System Design Document](../../docs/System%20Design%20Document.md):** Kubernetes deployment strategy, multi-tier network topologies, and horizontal autoscaling.
-* **[Root Project Guide](../../README.md):** Repository layout and multi-container Docker Compose instructions.
+* **[Root Project Guide](../../README.md):** Repository layout and multi-container Podman Compose instructions.
 

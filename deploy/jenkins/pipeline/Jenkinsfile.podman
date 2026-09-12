@@ -1,8 +1,8 @@
 // ==============================================================================
-// Jenkinsfile.docker - Docker Build, Test & Compose Deployment Pipeline
+// Jenkinsfile.podman - Podman Build, Test & Compose Deployment Pipeline
 // ==============================================================================
 // Orchestrates end-to-end building, JDK 25 testing, containerization, and
-// Docker Compose stack verification for the TaskApp full-stack application.
+// Podman Compose stack verification for the TaskApp full-stack application.
 // ==============================================================================
 
 pipeline {
@@ -17,9 +17,9 @@ pipeline {
 
     parameters {
         string(name: 'IMAGE_TAG', defaultValue: "build-${BUILD_NUMBER}", description: 'Container image tag')
-        booleanParam(name: 'RUN_SMOKE_TEST', defaultValue: true, description: 'Spin up and verify Docker Compose stack')
+        booleanParam(name: 'RUN_SMOKE_TEST', defaultValue: true, description: 'Spin up and verify Podman Compose stack')
         booleanParam(name: 'PUSH_IMAGES', defaultValue: false, description: 'Push built images to remote container registry')
-        string(name: 'REGISTRY_URL', defaultValue: '', description: 'Container registry URL (e.g. docker.io/myrepo or AWS ECR)')
+        string(name: 'REGISTRY_URL', defaultValue: '', description: 'Container registry URL (e.g. quay.io/myrepo or AWS ECR)')
     }
 
     environment {
@@ -46,11 +46,11 @@ pipeline {
                     echo "--- Java Version ---"
                     "${JAVA25_HOME}/bin/java" -version
                     
-                    echo "--- Docker CLI ---"
-                    docker --version
+                    echo "--- Podman CLI ---"
+                    podman --version
                     
-                    echo "--- Docker Compose ---"
-                    docker compose version
+                    echo "--- Podman Compose ---"
+                    podman compose version
                     
                     echo "--- Node.js & NPM ---"
                     node --version || true
@@ -90,18 +90,18 @@ pipeline {
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Build Container Images') {
             steps {
-                echo "==> Building multi-stage production Docker images..."
+                echo "==> Building multi-stage production container images with Podman..."
                 sh """
                     echo "Building ${BACKEND_IMAGE}:${params.IMAGE_TAG}..."
-                    docker build \
+                    podman build \
                         -t ${BACKEND_IMAGE}:${params.IMAGE_TAG} \
                         -t ${BACKEND_IMAGE}:latest \
                         ./backend
 
                     echo "Building ${FRONTEND_IMAGE}:${params.IMAGE_TAG}..."
-                    docker build \
+                    podman build \
                         -t ${FRONTEND_IMAGE}:${params.IMAGE_TAG} \
                         -t ${FRONTEND_IMAGE}:latest \
                         ./frontend
@@ -109,21 +109,21 @@ pipeline {
             }
         }
 
-        stage('Docker Compose Stack Smoke Test') {
+        stage('Podman Compose Stack Smoke Test') {
             when {
                 expression { return params.RUN_SMOKE_TEST }
             }
             steps {
-                echo "==> Starting Docker Compose integration test stack..."
+                echo "==> Starting Podman Compose integration test stack..."
                 sh '''
                     # Ensure prerequisite external pgdata volume exists for postgres
-                    docker volume create pgdata || true
+                    podman volume create pgdata || true
 
                     # Validate compose configuration
-                    docker compose -f deploy/Docker/docker-compose.yaml config > /dev/null
+                    podman compose -f deploy/podman/docker-compose.yaml config > /dev/null
                     
                     # Launch stack in detached mode
-                    docker compose -f deploy/Docker/docker-compose.yaml up -d
+                    podman compose -f deploy/podman/docker-compose.yaml up -d
 
                     echo "Waiting for services to become healthy..."
                     ATTEMPTS=0
@@ -145,8 +145,8 @@ pipeline {
 
                     if [ "$SUCCESS" != "true" ]; then
                         echo "Smoke test failed! Collecting container logs..."
-                        docker compose -f deploy/Docker/docker-compose.yaml logs
-                        docker compose -f deploy/Docker/docker-compose.yaml down -v
+                        podman compose -f deploy/podman/docker-compose.yaml logs
+                        podman compose -f deploy/podman/docker-compose.yaml down -v
                         error("Smoke test timed out waiting for backend healthcheck.")
                     fi
 
@@ -156,7 +156,7 @@ pipeline {
             post {
                 always {
                     echo "Tearing down smoke test Compose stack..."
-                    sh 'docker compose -f deploy/Docker/docker-compose.yaml down || true'
+                    sh 'podman compose -f deploy/podman/docker-compose.yaml down || true'
                 }
             }
         }
@@ -168,10 +168,10 @@ pipeline {
             steps {
                 echo "==> Tagging and publishing images to ${params.REGISTRY_URL}..."
                 sh """
-                    docker tag ${BACKEND_IMAGE}:${params.IMAGE_TAG} ${params.REGISTRY_URL}/${BACKEND_IMAGE}:${params.IMAGE_TAG}
-                    docker tag ${FRONTEND_IMAGE}:${params.IMAGE_TAG} ${params.REGISTRY_URL}/${FRONTEND_IMAGE}:${params.IMAGE_TAG}
-                    docker push ${params.REGISTRY_URL}/${BACKEND_IMAGE}:${params.IMAGE_TAG}
-                    docker push ${params.REGISTRY_URL}/${FRONTEND_IMAGE}:${params.IMAGE_TAG}
+                    podman tag ${BACKEND_IMAGE}:${params.IMAGE_TAG} ${params.REGISTRY_URL}/${BACKEND_IMAGE}:${params.IMAGE_TAG}
+                    podman tag ${FRONTEND_IMAGE}:${params.IMAGE_TAG} ${params.REGISTRY_URL}/${FRONTEND_IMAGE}:${params.IMAGE_TAG}
+                    podman push ${params.REGISTRY_URL}/${BACKEND_IMAGE}:${params.IMAGE_TAG}
+                    podman push ${params.REGISTRY_URL}/${FRONTEND_IMAGE}:${params.IMAGE_TAG}
                 """
             }
         }
@@ -179,7 +179,7 @@ pipeline {
 
     post {
         success {
-            echo "Pipeline completed successfully: All tests passed and Docker containers built."
+            echo "Pipeline completed successfully: All tests passed and Podman containers built."
         }
         failure {
             echo "Pipeline failed! Please check logs above for compilation or container errors."

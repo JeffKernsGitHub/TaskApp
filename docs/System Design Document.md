@@ -110,7 +110,7 @@ flowchart TD
 ```
 
 ### 3.2 Network Topology & Component Isolation
-* **Docker Compose Network:** All containers reside on an isolated bridge network `taskapp-net`. 
+* **Podman Compose Network:** All containers reside on an isolated bridge network `taskapp-net`. 
   * Only NGINX (Port 80) and optionally PostgreSQL (Port 5432 for DBA access) and Backend (Port 8081 for direct debugging) expose host ports.
   * In production, the backend is strictly reachable only through NGINX internal DNS routing (`http://backend:8080`).
 * **Kubernetes Namespaces:** Workloads are partitioned into dedicated namespaces (`taskapp-dev`, `taskapp-prod`) with ClusterIP services shielding the database and backend pods from external ingress.
@@ -199,7 +199,7 @@ frontend/src/app/
 
 ### 4.2 Edge Reverse Proxy (`frontend/nginx/`)
 NGINX operates as the single ingress controller for static and dynamic traffic:
-* **Dynamic Upstream Environment Resolution:** Uses `envsubst` inside Docker entrypoint (`default.conf.template`) to bind dynamic `BACKEND_HOST` and `BACKEND_PORT` targets.
+* **Dynamic Upstream Environment Resolution:** Uses `envsubst` inside container entrypoint (`default.conf.template`) to bind dynamic `BACKEND_HOST` and `BACKEND_PORT` targets.
 * **SPA PushState Routing:** Guarantees Angular client-side deep links resolve correctly:
   ```nginx
   location / {
@@ -369,7 +369,9 @@ spring:
 
 ## 7. Infrastructure, Containerization & CI/CD Strategy
 
-### 7.1 Multi-Stage Docker Packaging
+### 7.1 Multi-Stage Podman / OCI Packaging
+
+TaskApp utilizes **Podman** for daemonless, rootless container builds adhering to the Open Container Initiative (OCI) image specifications (NIST SP 800-190 Application Container Security):
 
 #### Frontend (`frontend/Dockerfile`)
 * **Stage 1 (Builder):** Uses `node:22-alpine`, installs dependencies via clean lockfile, and compiles production bundles with optimizations (`ng build --configuration production`).
@@ -382,11 +384,13 @@ spring:
 
 ### 7.2 Orchestration Specifications
 
-#### 1. Docker Compose (`deploy/Docker/docker-compose.yaml`)
+#### 1. Podman Compose (`deploy/podman/docker-compose.yaml`)
 Designed for developer onboarding and integration testing:
-* Automated service startup order using Docker health checks:
+* Automated service startup order using Podman health checks:
   `postgres` (healthy via `pg_isready`) -> `backend` (healthy via `/actuator/health`) -> `frontend` (healthy via `/health`).
 * Shared bridge network `taskapp-net` with persistent named volume `pgdata`.
+* **Rootless Daemonless Architecture:** Containers run under user namespaces without requiring a root daemon, enhancing host isolation.
+* **Kubernetes Native Parity:** Podman also supports running Kubernetes manifests locally without compose via `podman play kube deploy/k8s/base/kustomization.yaml`.
 
 #### 2. Kubernetes Cloud-Native Manifests (`deploy/k8s/`)
 Organized using the **CNCF Kustomize standard**:
@@ -410,19 +414,19 @@ deploy/k8s/
 
 ### 7.3 Jenkins CI/CD Automation Architecture (`deploy/jenkins/`)
 Declarative CI/CD pipelines defined in version-controlled Jenkinsfiles under `deploy/jenkins/pipeline/`:
-* **`Jenkinsfile.docker` (Docker Build, Test & Compose Pipeline):**
+* **`Jenkinsfile.podman` (Podman Build, Test & Compose Pipeline):**
   1. *Checkout:* Git clone & checkout.
-  2. *Environment Diagnostics:* Verification of JDK 25 (`$JAVA25_HOME`), Docker CLI, Docker Compose, and Node.js toolchains.
+  2. *Environment Diagnostics:* Verification of JDK 25 (`$JAVA25_HOME`), Podman CLI, Podman Compose, and Node.js toolchains.
   3. *Backend Automated Tests (JDK 25):* Spring Boot unit and slice tests (`./mvnw clean test`) executing against in-memory H2 database; publishes JUnit test results.
   4. *Frontend Lint & Test Build:* Dependency installation (`npm ci`) and production Angular bundle build.
-  5. *Build Docker Images:* Multi-stage Docker builds tagging `taskapp-backend:${IMAGE_TAG}` and `taskapp-web:${IMAGE_TAG}`.
-  6. *Docker Compose Smoke Test:* Spins up full stack via `deploy/Docker/docker-compose.yaml`, polls backend `/actuator/health` probe, and tears down gracefully.
+  5. *Build Container Images:* Multi-stage Podman builds tagging `taskapp-backend:${IMAGE_TAG}` and `taskapp-web:${IMAGE_TAG}`.
+  6. *Podman Compose Smoke Test:* Spins up full stack via `deploy/podman/docker-compose.yaml`, polls backend `/actuator/health` probe, and tears down gracefully.
   7. *Registry Push (Optional):* Pushes tagged container images to a remote container registry if enabled.
 * **`Jenkinsfile.k8s` (Kubernetes Kustomize Deployment Pipeline):**
   1. *Checkout:* Git clone & checkout.
-  2. *Diagnostics:* Toolchain verification (JDK 25, Docker, `kubectl`, and `kustomize`).
+  2. *Diagnostics:* Toolchain verification (JDK 25, Podman, `kubectl`, and `kustomize`).
   3. *Automated Tests:* Parallel test execution for Spring Boot backend (JDK 25) and Angular frontend.
-  4. *Build Container Images:* Builds multi-stage container images for backend and frontend.
+  4. *Build Container Images:* Builds multi-stage container images for backend and frontend using Podman.
   5. *Configure Kustomize Overlay:* Dynamically sets target image tags using `kustomize edit set image` in `deploy/k8s/overlays/${TARGET_ENV}`.
   6. *Validate Manifests:* Manifest synthesis and dry-run validation using `kubectl kustomize`.
   7. *Deploy to Cluster:* Applies the rendered overlay to the target namespace (`taskapp-${TARGET_ENV}`).
@@ -478,7 +482,7 @@ Because the Spring Boot backend is completely stateless, pods scale elastically 
 
 For senior engineers inspecting this repository:
 1. **Source Code Cleanliness:** Pure record DTOs, constructor injection, zero deprecated Spring Security classes, explicit JPA transaction boundaries.
-2. **Deterministic Infrastructure:** Zero host dependencies beyond Docker. The entire stack (DB, API, Web, Network, Volumes) initializes cleanly via `docker compose up -d --build`.
+2. **Deterministic Infrastructure:** Zero host dependencies beyond Podman. The entire stack (DB, API, Web, Network, Volumes) initializes cleanly via `podman compose up -d --build`.
 3. **Enterprise Compliance:** Rigorous alignment with NIST session lifetime guidelines, RFC 9457 error contracts, and principle of least privilege in data tier permissions.
 4. **Architectural Currency:** State-of-the-art framework versions (Java 25, Spring Boot 4.1.1, Angular 22, PostgreSQL 18, NGINX 1.27) demonstrating forward-compatible software engineering leadership.
 

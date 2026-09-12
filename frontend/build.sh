@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ==============================================================================
-# Build script for TaskApp NGINX Frontend Docker Container
+# Build script for TaskApp NGINX Frontend Podman Container
 # ==============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,7 +15,7 @@ print_usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Build the TaskApp NGINX Docker container (compiles Angular and configures NGINX).
+Build the TaskApp NGINX Podman container (compiles Angular and configures NGINX).
 
 Options:
   -t, --tag TAG       Specify image tag (default: taskapp-web:latest)
@@ -52,12 +52,12 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "============================================================"
-echo " Building Docker Image: ${IMAGE_TAG}"
+echo " Building Podman Image: ${IMAGE_TAG}"
 echo " Dockerfile:           ${SCRIPT_DIR}/Dockerfile"
 echo " Build Context:        ${SCRIPT_DIR}"
 echo "============================================================"
 
-docker build \
+podman build \
     ${NO_CACHE} \
     -f "${SCRIPT_DIR}/Dockerfile" \
     -t "${IMAGE_TAG}" \
@@ -65,4 +65,4 @@ docker build \
 
 echo ""
 echo " Successfully built ${IMAGE_TAG}"
-echo "Run './run.sh' or 'docker run -p 80:80 ${IMAGE_TAG}' to start the container."
+echo "Run './run.sh' or 'podman run -p 80:80 ${IMAGE_TAG}' to start the container."

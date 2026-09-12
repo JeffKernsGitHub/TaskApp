@@ -12,7 +12,7 @@ git-client:latest
 credentials:latest
 credentials-binding:latest
 
-# Docker Integration
+# Container Integration
 docker-workflow:latest
 docker-plugin:latest
 

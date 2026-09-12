@@ -75,9 +75,9 @@ npm test -- --watch=false
 
 ---
 
-## Production Docker Container
+## Production Podman Container
 
-The frontend image can be built and run standalone or orchestrated via `deploy/Docker/docker-compose.yaml`.
+The frontend image can be built and run standalone or orchestrated via `deploy/podman/docker-compose.yaml`.
 
 ### 1. Build Container Image
 ```bash
@@ -91,7 +91,7 @@ The frontend image can be built and run standalone or orchestrated via `deploy/D
 ./run.sh
 
 # Run on port 8085 with custom backend host/port
-./run.sh --port 8085 --backend-host host.docker.internal --backend-port 8080
+./run.sh --port 8085 --backend-host host.containers.internal --backend-port 8080
 ```
 
 ### 3. Stop Container
@@ -105,7 +105,7 @@ The frontend image can be built and run standalone or orchestrated via `deploy/D
 
 | Variable | Default | Description |
 |---|---|---|
-| `BACKEND_HOST` | `host.docker.internal` | Hostname or IP of the Spring Boot backend service |
+| `BACKEND_HOST` | `host.containers.internal` | Hostname or IP of the Spring Boot backend service |
 | `BACKEND_PORT` | `8080` | Port of the Spring Boot backend service |
 
 ---
@@ -125,5 +125,5 @@ The frontend image can be built and run standalone or orchestrated via `deploy/D
 
 * **[Technical & Architectural Glossary](../docs/Glossary.md):** Detailed definitions for Angular 22 Signals, zoneless change detection, functional guards, NGINX pushState routing, and more.
 * **[System Design Document](../docs/System%20Design%20Document.md):** Full-stack architecture, ADRs, sequence diagrams, and security models.
-* **[Root Project Guide](../README.md):** Overall system architecture and Docker Compose instructions.
+* **[Root Project Guide](../README.md):** Overall system architecture and Podman Compose instructions.
 

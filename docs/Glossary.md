@@ -83,13 +83,14 @@
 
 ### 6. DevOps, Orchestration & CI/CD
 * [CNCF Kustomize](#cncf-kustomize)
-* [Docker Compose](#docker-compose)
-* [Docker Multi-Stage Build](#docker-multi-stage-build)
 * [Insomnia REST Workspace](#insomnia-rest-workspace)
 * [Jenkins Declarative Pipeline](#jenkins-declarative-pipeline)
 * [Kubernetes (K8s)](#kubernetes-k8s)
 * [Liveness & Readiness Probes](#liveness-readiness-probes)
 * [PersistentVolumeClaim (PVC)](#persistentvolumeclaim-pvc)
+* [Podman](#podman)
+* [Podman Compose](#podman-compose)
+* [Podman Multi-Stage Build](#podman-multi-stage-build)
 * [StatefulSet](#statefulset)
 * [Trivy](#trivy)
 
@@ -160,16 +161,6 @@
 * **Definition:** A Hibernate ORM configuration mode where the application checks that JPA entity mappings match the database schema at startup, aborting boot if any discrepancies are found without executing DDL modifications.
 * **TaskApp Implementation:** Configured via `spring.jpa.hibernate.ddl-auto: validate` in `application.yaml` to prevent automatic schema drift and ensure version-controlled DDL determinism.
 * **References:** [System Design Document § 2 (ADR-004)](System%20Design%20Document.md#adr-004-strict-relational-schema-governance--jpa-validation-mode), [backend/README.md](../backend/README.md)
-
-#### Docker Compose
-* **Definition:** A tool for defining and running multi-container Docker applications through declarative YAML configuration files.
-* **TaskApp Implementation:** Defined in `deploy/Docker/docker-compose.yaml` to orchestrate the PostgreSQL container, Spring Boot backend API, and NGINX frontend reverse proxy on an isolated bridge network (`taskapp-net`) with healthcheck sequencing.
-* **References:** [README.md](../README.md#quick-start-docker-compose), [System Design Document § 7.2](System%20Design%20Document.md#1-docker-compose-deploydockerdocker-composeyaml)
-
-#### Docker Multi-Stage Build
-* **Definition:** A Dockerfile construction method that employs multiple `FROM` instructions to separate compilation environments from the final minimal runtime image.
-* **TaskApp Implementation:** The frontend builder (`node:22-alpine`) copies compiled assets into an `nginx:1.27-alpine` runtime (~21MB), while the backend builder employs a 3-stage build: compiling with `eclipse-temurin:25-jdk-alpine`, generating a minimal Server JRE (~63MB) via `jlink`, and deploying into an unprivileged `alpine:3.21` container.
-* **References:** [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-docker-packaging), [frontend/Dockerfile](../frontend/Dockerfile), [backend/Dockerfile](../backend/Dockerfile)
 
 ---
 
@@ -243,13 +234,13 @@
 
 #### Jenkins Declarative Pipeline
 * **Definition:** A structured, version-controlled DSL for authoring Jenkins CI/CD automation pipelines within a `Jenkinsfile`.
-* **TaskApp Implementation:** Defined in `deploy/jenkins/pipeline/Jenkinsfile.docker` and `deploy/jenkins/pipeline/Jenkinsfile.k8s` to automate JDK 25 testing, container packaging, Docker Compose smoke tests, and Kubernetes Kustomize rollout.
+* **TaskApp Implementation:** Defined in `deploy/jenkins/pipeline/Jenkinsfile.podman` and `deploy/jenkins/pipeline/Jenkinsfile.k8s` to automate JDK 25 testing, container packaging, Podman Compose smoke tests, and Kubernetes Kustomize rollout.
 * **References:** [deploy/jenkins/README.md](../deploy/jenkins/README.md), [System Design Document § 7.3](System%20Design%20Document.md#73-jenkins-cicd-automation-architecture-deployjenkins)
 
 #### jlink (Java Linker)
 * **Definition:** A JDK command-line tool that assembles and optimizes a set of modules and their dependencies into a custom, stripped runtime image containing only the necessary components.
 * **TaskApp Implementation:** Used in Stage 2 of `backend/Dockerfile` to generate a 63MB headless Server JRE (stripping debug symbols, header files, and unneeded modules), reducing the backend runtime footprint by over 70% and minimizing container attack surface.
-* **References:** [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-docker-packaging), [backend/Dockerfile](../backend/Dockerfile), [backend/README.md](../backend/README.md#containerization--custom-server-jre-jlink)
+* **References:** [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-podman--oci-packaging), [backend/Dockerfile](../backend/Dockerfile), [backend/README.md](../backend/README.md#containerization--custom-server-jre-jlink)
 
 #### JWT (JSON Web Token)
 * **Definition:** A compact, URL-safe standard (RFC 7519) for transmitting claims securely between parties as a digitally signed JSON object.
@@ -349,6 +340,21 @@
 * **Definition:** A Java platform enhancement that introduces lightweight user-mode threads managed by the JVM runtime rather than 1:1 mapped OS threads.
 * **TaskApp Implementation:** Enabled via `spring.threads.virtual.enabled: true` in Spring Boot 4.1.1 on Java 25, allowing blocking JDBC calls to unmount virtual threads from carrier threads, achieving high concurrency (> 2,000 req/sec) without reactive code complexity.
 * **References:** [System Design Document § 2 (ADR-001)](System%20Design%20Document.md#adr-001-modern-java-25--project-loom-virtual-threads-over-reactive-webflux), [backend/README.md](../backend/README.md)
+
+#### Podman
+* **Definition:** A daemonless, open-source Linux tool for finding, running, building, sharing, and deploying applications using Open Container Initiative (OCI) Containers and Container Images.
+* **TaskApp Implementation:** Used as the primary container engine across the repository, enabling rootless container builds and execution without requiring a root background daemon.
+* **References:** [README.md](../README.md), [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-podman--oci-packaging)
+
+#### Podman Compose
+* **Definition:** A container orchestration provider for defining and running multi-container applications through declarative YAML configuration files using Podman.
+* **TaskApp Implementation:** Defined in `deploy/podman/docker-compose.yaml` to orchestrate the PostgreSQL container, Spring Boot backend API, and NGINX frontend reverse proxy on an isolated bridge network (`taskapp-net`) with healthcheck sequencing.
+* **References:** [README.md](../README.md#run-mode-1-podman-compose), [System Design Document § 7.2](System%20Design%20Document.md#1-podman-compose-deploypodmandocker-composeyaml)
+
+#### Podman Multi-Stage Build
+* **Definition:** An OCI container construction method that employs multiple `FROM` instructions to separate compilation environments from the final minimal runtime image without requiring a root daemon.
+* **TaskApp Implementation:** The frontend builder (`node:22-alpine`) copies compiled assets into an `nginx:1.27-alpine` runtime (~21MB), while the backend builder employs a 3-stage build: compiling with `eclipse-temurin:25-jdk-alpine`, generating a minimal Server JRE (~63MB) via `jlink`, and deploying into an unprivileged `alpine:3.21` container.
+* **References:** [System Design Document § 7.1](System%20Design%20Document.md#71-multi-stage-podman--oci-packaging), [frontend/Dockerfile](../frontend/Dockerfile), [backend/Dockerfile](../backend/Dockerfile)
 
 ---
 
@@ -471,7 +477,7 @@ To explore how these terms are implemented throughout the TaskApp codebase, cons
 
 * **[System Design Document (SDD)](System%20Design%20Document.md):** Architecture, ADRs, component models, and sequence flows.
 * **[Database Data Dictionary](Data%20Dictionary.md):** PostgreSQL schema catalog, tables, columns, indexes, and constraints.
-* **[Root Project Architecture Guide](../README.md):** Repository layout, multi-tier stack, and Docker Compose startup.
+* **[Root Project Architecture Guide](../README.md):** Repository layout, multi-tier stack, and Podman Compose startup.
 * **[Frontend Client Architecture Guide](../frontend/README.md):** Angular 22 signals, standalone components, and NGINX setup.
 * **[Backend Service Architecture Guide](../backend/README.md):** Spring Boot 4, Java 25 virtual threads, and REST API details.
 * **[Database Architecture Guide](../database/README.md):** PostgreSQL DDL, permissions, and seed generation scripts.

@@ -1,7 +1,7 @@
 # ==============================================================================
 # Stage 1: Build Spring Boot JAR with Eclipse Temurin JDK 25
 # ==============================================================================
-FROM eclipse-temurin:25-jdk-alpine AS build
+FROM docker.io/library/eclipse-temurin:25-jdk-alpine AS build
 
 WORKDIR /workspace
 
@@ -24,7 +24,7 @@ RUN ./mvnw clean package -DskipTests -B
 # ==============================================================================
 # Stage 2: Generate Custom Minimal Server JRE with jlink
 # ==============================================================================
-FROM eclipse-temurin:25-jdk-alpine AS jlink
+FROM docker.io/library/eclipse-temurin:25-jdk-alpine AS jlink
 
 WORKDIR /workspace
 
@@ -53,7 +53,7 @@ RUN jar xf app.jar && \
 # ==============================================================================
 # Stage 3: Minimal Production Runtime Image
 # ==============================================================================
-FROM alpine:3.21 AS runtime
+FROM docker.io/library/alpine:3.21 AS runtime
 
 # Install essential runtime dependencies:
 # - tzdata: timezone data

@@ -1,8 +1,8 @@
 # ==============================================================================
-# Jenkins CI/CD Controller Orchestration
+# Jenkins CI/CD Controller Orchestration (Podman)
 # ==============================================================================
 # All mutable state (configuration, credentials, jobs, artifacts, plugin data,
-# and dependency caches) is stored in persistent EXTERNAL Docker volumes.
+# and dependency caches) is stored in persistent EXTERNAL Podman volumes.
 # ==============================================================================
 services:
   jenkins:
@@ -26,8 +26,8 @@ services:
       - jenkins_data:/var/jenkins_home
       # 2. External cache volume for Maven dependencies (survives rebuilds)
       - jenkins_maven_cache:/var/jenkins_home/.m2
-      # 3. Host Docker daemon socket for container building & Compose orchestration
-      - /var/run/docker.sock:/var/run/docker.sock
+      # 3. Host Podman socket for container building & Compose orchestration
+      - ${PODMAN_SOCKET:-/run/podman/podman.sock}:/run/podman/podman.sock
     networks:
       - jenkins-net
 

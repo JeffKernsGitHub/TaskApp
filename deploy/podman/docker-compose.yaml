@@ -1,5 +1,7 @@
 # ==============================================================================
-# TaskApp - Full Stack Orchestration (PostgreSQL + Spring Boot + NGINX/Angular)
+# TaskApp - Full Stack Podman Orchestration (PostgreSQL + Spring Boot + NGINX)
+# ==============================================================================
+# Executable via: podman compose -f deploy/podman/docker-compose.yaml up -d --build
 # ==============================================================================
 services:
 
@@ -75,12 +77,12 @@ services:
     networks:
       - taskapp-net
 
-# Shared bridge network allowing inter-container DNS resolution
+# Shared bridge network allowing inter-container DNS resolution in Podman
 networks:
   taskapp-net:
     driver: bridge
 
-# Existing PostgreSQL data volume
+# Existing persistent PostgreSQL data volume (created via: podman volume create pgdata)
 volumes:
   pgdata:
     external: true

@@ -2,30 +2,30 @@
 set -euo pipefail
 
 # ==============================================================================
-# Run script for TaskApp NGINX Frontend Docker Container
+# Run script for TaskApp NGINX Frontend Podman Container
 # ==============================================================================
 
 IMAGE_NAME="taskapp-web:latest"
 CONTAINER_NAME="taskapp-web"
 HOST_PORT="80"
-BACKEND_HOST="host.docker.internal"
+BACKEND_HOST="host.containers.internal"
 BACKEND_PORT="8080"
-DOCKER_NETWORK=""
+PODMAN_NETWORK=""
 DETACHED=true
 
 print_usage() {
     cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Run the TaskApp NGINX Docker container.
+Run the TaskApp NGINX Podman container.
 
 Options:
   -p, --port PORT             Host port to publish NGINX on (default: 80)
-  -b, --backend-host HOST     Spring Boot backend host (default: host.docker.internal)
+  -b, --backend-host HOST     Spring Boot backend host (default: host.containers.internal)
   -s, --backend-port PORT     Spring Boot backend port (default: 8080)
   -n, --name NAME             Container name (default: taskapp-web)
-  -i, --image IMAGE           Docker image to run (default: taskapp-web:latest)
-  --network NETWORK           Connect container to a specific Docker network
+  -i, --image IMAGE           Podman image to run (default: taskapp-web:latest)
+  --network NETWORK           Connect container to a specific Podman network
   -f, --foreground            Run in foreground (interactive mode)
   -h, --help                  Show this help message and exit
 
@@ -36,7 +36,7 @@ Examples:
   # Run on port 8085 (if port 80 is privileged or busy)
   ./run.sh --port 8085
 
-  # Run on a custom Docker network with backend container named 'taskmanager'
+  # Run on a custom Podman network with backend container named 'taskmanager'
   ./run.sh --network taskapp-net --backend-host taskmanager --backend-port 8080
 EOF
 }
@@ -64,7 +64,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --network)
-            DOCKER_NETWORK="$2"
+            PODMAN_NETWORK="$2"
             shift 2
             ;;
         -f|--foreground)
@@ -84,7 +84,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Check if image exists
-if ! docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
+if ! podman image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
     echo "Image '${IMAGE_NAME}' not found locally."
     echo "Running build script first..."
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -92,25 +92,26 @@ if ! docker image inspect "${IMAGE_NAME}" >/dev/null 2>&1; then
 fi
 
 # Stop and remove existing container if running
-if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
+if podman ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
     echo "Removing existing container '${CONTAINER_NAME}'..."
-    docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
+    podman rm -f "${CONTAINER_NAME}" >/dev/null 2>&1
 fi
 
-DOCKER_ARGS=(
+PODMAN_ARGS=(
     --name "${CONTAINER_NAME}"
     -p "${HOST_PORT}:80"
     -e "BACKEND_HOST=${BACKEND_HOST}"
     -e "BACKEND_PORT=${BACKEND_PORT}"
+    --add-host=host.containers.internal:host-gateway
     --add-host=host.docker.internal:host-gateway
 )
 
-if [[ -n "${DOCKER_NETWORK}" ]]; then
-    DOCKER_ARGS+=(--network "${DOCKER_NETWORK}")
+if [[ -n "${PODMAN_NETWORK}" ]]; then
+    PODMAN_ARGS+=(--network "${PODMAN_NETWORK}")
 fi
 
 if [[ "${DETACHED}" == true ]]; then
-    DOCKER_ARGS+=(-d)
+    PODMAN_ARGS+=(-d)
 fi
 
 echo "============================================================"
@@ -119,16 +120,16 @@ echo " Container Name:       ${CONTAINER_NAME}"
 echo " Image:                ${IMAGE_NAME}"
 echo " Host Port:            http://localhost:${HOST_PORT}"
 echo " Upstream Backend:     http://${BACKEND_HOST}:${BACKEND_PORT}"
-if [[ -n "${DOCKER_NETWORK}" ]]; then
-echo " Docker Network:       ${DOCKER_NETWORK}"
+if [[ -n "${PODMAN_NETWORK}" ]]; then
+echo " Podman Network:       ${PODMAN_NETWORK}"
 fi
 echo "============================================================"
 
-docker run "${DOCKER_ARGS[@]}" "${IMAGE_NAME}"
+podman run "${PODMAN_ARGS[@]}" "${IMAGE_NAME}"
 
 if [[ "${DETACHED}" == true ]]; then
     echo ""
     echo "Container '${CONTAINER_NAME}' started successfully in background."
-    echo "View logs:      docker logs -f ${CONTAINER_NAME}"
-    echo "Stop container: ./stop.sh (or 'docker stop ${CONTAINER_NAME}')"
+    echo "View logs:      podman logs -f ${CONTAINER_NAME}"
+    echo "Stop container: ./stop.sh (or 'podman stop ${CONTAINER_NAME}')"
 fi

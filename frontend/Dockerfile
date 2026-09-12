@@ -1,7 +1,7 @@
 # ==============================================================================
 # Stage 1: Build Angular Application
 # ==============================================================================
-FROM node:22-alpine AS build
+FROM docker.io/library/node:22-alpine AS build
 
 WORKDIR /app
 
@@ -18,7 +18,7 @@ RUN npm run build -- --configuration production
 # ==============================================================================
 # Stage 2: Production NGINX Web Server & API Reverse Proxy
 # ==============================================================================
-FROM nginx:1.27-alpine AS runtime
+FROM docker.io/library/nginx:1.27-alpine AS runtime
 
 # Remove default NGINX configuration and sample html
 RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
@@ -33,7 +33,7 @@ COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/default.conf.template /etc/nginx/templates/default.conf.template
 
 # Default environment variables for backend routing
-ENV BACKEND_HOST="host.docker.internal" \
+ENV BACKEND_HOST="host.containers.internal" \
     BACKEND_PORT="8080" \
     NGINX_ENVSUBST_FILTER="BACKEND_"
 
