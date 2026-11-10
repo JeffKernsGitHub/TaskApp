@@ -20,6 +20,7 @@ database/
 
 ## Database & Schema Specification
 
+* **Database Engine:** PostgreSQL 18 (Container: `postgres:18-alpine`)
 * **Database Name:** `app_db`
 * **Isolated Schema:** `tasks`
 * **Application User:** `spring_boot_user`
