@@ -38,7 +38,7 @@ Modern enterprise teams require high-efficiency, reliable, and secure collaborat
 
 ### ADR-001: Modern Java 25 & Project Loom Virtual Threads over Reactive WebFlux
 * **Context:** High-throughput microservices traditionally chose either synchronous multi-threading (1 OS thread per request, memory-heavy) or reactive programming (Spring WebFlux / Project Reactor).
-* **Decision:** Adopt **Spring Boot 4.1.1 on Java 25 with Virtual Threads enabled**.
+* **Decision:** Adopt **Spring Boot 4.1.2 on Java 25 with Virtual Threads enabled**.
 * **Rationale:** Virtual threads provide lightweight, user-mode threads managed by the JVM rather than the host OS. When a virtual thread blocks on synchronous JDBC operations or external I/O, the underlying carrier thread is unmounted and freed to execute other work. This provides reactive-level concurrency and throughput while preserving synchronous, imperative coding semantics, standard stack traces, and straightforward debugging.
 * **Trade-off:** Requires disciplined avoidance of `synchronized` blocks that pin carrier threads (resolved in JDK 24+ and modern library releases).
 
@@ -89,7 +89,7 @@ flowchart TD
     end
 
     subgraph AppTier ["Application Tier (Virtual Threads)"]
-        Backend["Spring Boot 4.1.1 API Service (Java 25 Loom)\n(Container: taskmanager-api :8080)"]
+        Backend["Spring Boot 4.1.2 API Service (Java 25 Loom)\n(Container: taskmanager-api :8080)"]
         Actuator["Spring Actuator\n(/actuator/health)"]
         Security["Spring Security 6+\n(JWT Filter & SpEL Evaluators)"]
     end
@@ -211,7 +211,7 @@ NGINX operates as the single ingress controller for static and dynamic traffic:
 * **Security Headers:** Enforces `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `X-XSS-Protection: 1; mode=block`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 
 ### 4.3 Backend Service Architecture (`backend/`)
-The backend microservice is built upon Spring Boot 4.1.1 on Java 25, structured using clean layered separation:
+The backend microservice is built upon Spring Boot 4.1.2 on Java 25, structured using clean layered separation:
 
 ```
 backend/src/main/java/info/jeffkerns/taskmanager/
@@ -484,7 +484,7 @@ For senior engineers inspecting this repository:
 1. **Source Code Cleanliness:** Pure record DTOs, constructor injection, zero deprecated Spring Security classes, explicit JPA transaction boundaries.
 2. **Deterministic Infrastructure:** Zero host dependencies beyond Podman. The entire stack (DB, API, Web, Network, Volumes) initializes cleanly via `podman compose up -d --build`.
 3. **Enterprise Compliance:** Rigorous alignment with NIST session lifetime guidelines, RFC 9457 error contracts, and principle of least privilege in data tier permissions.
-4. **Architectural Currency:** State-of-the-art framework versions (Java 25, Spring Boot 4.1.1, Angular 22, PostgreSQL 18, NGINX 1.27) demonstrating forward-compatible software engineering leadership.
+4. **Architectural Currency:** State-of-the-art framework versions (Java 25, Spring Boot 4.1.2, Angular 22, PostgreSQL 18, NGINX 1.27) demonstrating forward-compatible software engineering leadership.
 
 ---
 

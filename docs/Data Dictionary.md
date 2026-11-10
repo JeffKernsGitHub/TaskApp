@@ -25,7 +25,7 @@ The schema design follows Third Normal Form (3NF), enforces referential integrit
 | **Encoding / Collation** | `UTF8` / `en_US.utf8` | Supports internationalized character sets for usernames, emails, and task text. |
 | **Schema Name** | `tasks` | Connection JDBC string sets search path: `currentSchema=tasks`. |
 | **Application User** | `spring_boot_user` | Dedicated unprivileged user restricted strictly to DML operations. |
-| **ORM / Client** | Hibernate 7 (Spring Boot 4.1.1) | Configured with `hibernate.ddl-auto: validate` (zero automatic DDL). |
+| **ORM / Client** | Hibernate 7 (Spring Boot 4.1.2) | Configured with `hibernate.ddl-auto: validate` (zero automatic DDL). |
 | **Connection Pooling** | HikariCP | Default pool size: 10 connections; timeout: 20s; idle timeout: 5m; max lifetime: 30m. |
 | **Transaction Isolation** | `READ COMMITTED` (PostgreSQL default) | Sufficient for MVCC concurrency without dirty reads. |
 

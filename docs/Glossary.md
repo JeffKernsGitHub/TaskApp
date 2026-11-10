@@ -56,7 +56,7 @@
 * [Maven Wrapper (`mvnw`)](#maven-wrapper-mvnw)
 * [Open-Session-In-View Anti-Pattern (`open-in-view: false`)](#open-session-in-view-anti-pattern-open-in-view-false)
 * [Project Loom & Virtual Threads](#project-loom-virtual-threads)
-* [Spring Boot 4.1.1](#spring-boot-411)
+* [Spring Boot 4.1.2](#spring-boot-412)
 * [Spring Data JPA / Hibernate 7](#spring-data-jpa-hibernate-7)
 
 ### 4. Frontend & Edge Services
@@ -338,7 +338,7 @@
 
 #### Project Loom & Virtual Threads
 * **Definition:** A Java platform enhancement that introduces lightweight user-mode threads managed by the JVM runtime rather than 1:1 mapped OS threads.
-* **TaskApp Implementation:** Enabled via `spring.threads.virtual.enabled: true` in Spring Boot 4.1.1 on Java 25, allowing blocking JDBC calls to unmount virtual threads from carrier threads, achieving high concurrency (> 2,000 req/sec) without reactive code complexity.
+* **TaskApp Implementation:** Enabled via `spring.threads.virtual.enabled: true` in Spring Boot 4.1.2 on Java 25, allowing blocking JDBC calls to unmount virtual threads from carrier threads, achieving high concurrency (> 2,000 req/sec) without reactive code complexity.
 * **References:** [System Design Document § 2 (ADR-001)](System%20Design%20Document.md#adr-001-modern-java-25--project-loom-virtual-threads-over-reactive-webflux), [backend/README.md](../backend/README.md)
 
 #### Podman
@@ -394,7 +394,7 @@
 * **TaskApp Implementation:** Applied on controller endpoints, e.g. `@PreAuthorize("hasRole('ADMIN') or @taskSecurity.isTaskOwner(#id, authentication.name)")`.
 * **References:** [System Design Document § 4.3](System%20Design%20Document.md#43-backend-service-architecture-backend), [System Design Document § 6.1](System%20Design%20Document.md#61-nist-special-publication-alignment)
 
-#### Spring Boot 4.1.1
+#### Spring Boot 4.1.2
 * **Definition:** An enterprise Java framework providing opinionated auto-configuration, dependency injection, and embedded web servers for microservices.
 * **TaskApp Implementation:** The core backend framework orchestrating the REST API (`backend/`), Spring Security, Spring Data JPA, and Actuator endpoints.
 * **References:** [backend/README.md](../backend/README.md), [System Design Document § 4.3](System%20Design%20Document.md#43-backend-service-architecture-backend)

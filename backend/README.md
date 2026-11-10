@@ -39,7 +39,7 @@ This application demonstrates enterprise-grade Spring Boot architecture, includi
 ## Technology Stack
 
 - **Language:** Java 25 (with Virtual Threads enabled via Project Loom)
-- **Framework:** Spring Boot 4.1.1
+- **Framework:** Spring Boot 4.1.2
 - **Security:** Spring Security & JJWT (0.12.5) with HMAC-SHA256 tokens & BCrypt password hashing
 - **Persistence:** Spring Data JPA / Hibernate ORM & PostgreSQL (with HikariCP connection pooling)
 - **Validation:** Jakarta Bean Validation (Hibernate Validator)

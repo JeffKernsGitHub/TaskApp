@@ -42,7 +42,7 @@ An enterprise-grade cloud-native portfolio project demonstrating modern full-sta
 
 * **Frontend (`frontend/`):** Angular 22 (Standalone Components, Signals, Material 3, HTML5 PushState routing)
 * **Web Server & Reverse Proxy (`frontend/nginx/`):** NGINX 1.27 Alpine (Gzip compression, SPA fallback routing, dynamic upstream DNS)
-* **Backend (`backend/`):** Spring Boot 4.1.1 on Java 25 (Project Loom Virtual Threads, Spring Security, JWT HMAC-SHA256, Spring Data JPA / Hibernate 7)
+* **Backend (`backend/`):** Spring Boot 4.1.2 on Java 25 (Project Loom Virtual Threads, Spring Security, JWT HMAC-SHA256, Spring Data JPA / Hibernate 7)
 * **Database (`database/`):** PostgreSQL 18 Alpine (Custom `tasks` schema, ENUM types, custom sequences, HikariCP connection pooling)
 * **Orchestration & DevOps (`deploy/`):**
   * **Podman & Compose:** Rootless multi-stage builds, non-root runtime users, healthcheck probes
